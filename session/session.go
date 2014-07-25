@@ -1,39 +1,77 @@
 package session
 
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"net/http"
+)
+
 type Session struct {
-	Values map[interface{}]interface{}
-	Id     string
-	MaxAge int
+	Ctx                 Context
+	Username            string
+	Cookie_Session      *http.Cookie
+	Cookie_Admin        *http.Cookie
+	Cookie_Token        *http.Cookie
+	Cookie_Access_Token *http.Cookie
 }
 
-func NewSession(id string, maxAge int) *Session {
-	return &Session{Id: id, MaxAge: maxAge, Values: make(map[interface{}]interface{})}
-}
-
-func (s *Session) Set(key, value interface{}) {
-	s.Values[key] = value
-}
-
-func (s *Session) Get(key interface{}) interface{} {
-	if v, ok := s.Values[key]; ok {
-		return v
+func NewSession(r *http.Request) *Session {
+	s := new(Session)
+	s.Username = ""
+	if cookie, err := r.Cookie("Session_ID"); err != http.ErrNoCookie {
+		s.Cookie_Session = cookie
 	}
-	return nil
-}
-
-func (s *Session) Delete(key interface{}) {
-	delete(s.Values, key)
-}
-
-func (s *Session) Expire(seconds int) {
-	if seconds < 0 {
-		seconds = 0
+	if cookie, err := r.Cookie("admin"); err != http.ErrNoCookie {
+		s.Cookie_Admin = cookie
 	}
-	s.MaxAge = seconds
+	if cookie, err := r.Cookie("token"); err != http.ErrNoCookie {
+		s.Cookie_Token = cookie
+	}
+	if cookie, err := r.Cookie("access_token"); err != http.ErrNoCookie {
+		s.Cookie_Access_Token = cookie
+	}
+	s.Ctx = newContext()
+	return s
 }
 
-func (s *Session) Flush() {
-	s.Values = make(map[interface{}]interface{})
-	s.Id = NewUUID().HexString()
-	s.MaxAge = 0
+func (s *Session) NewCookie(name string) {
+	switch name {
+	case "Session_ID":
+		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+	case "token":
+		s.Cookie_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+	case "admin":
+		s.Cookie_Admin = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+	case "access_token":
+		s.Cookie_Access_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+	}
+}
+
+func (s *Session) DestroyCookie(w http.ResponseWriter) {
+	cookie := http.Cookie{Name: "Session_ID", MaxAge: -1}
+	s.setCookies(w, &cookie)
+	cookie = http.Cookie{Name: "token", MaxAge: -1}
+	s.setCookies(w, &cookie)
+	cookie = http.Cookie{Name: "admin", MaxAge: -1}
+	s.setCookies(w, &cookie)
+}
+
+func (s *Session) setCookies(w http.ResponseWriter, cookie *http.Cookie) {
+	http.SetCookie(w, cookie)
+}
+
+func (s *Session) SetCookies(w http.ResponseWriter, cookie *http.Cookie) {
+	s.setCookies(w, cookie)
+}
+
+func (s *Session) NewID() string {
+	return generateID()
+}
+
+func generateID() string {
+	buf := make([]byte, 40)
+	if n, err := rand.Read(buf); err == nil {
+		return base64.URLEncoding.EncodeToString(buf[:n])
+	}
+	return ""
 }
