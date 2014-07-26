@@ -17,6 +17,7 @@ type Session struct {
 
 func NewSession(r *http.Request) *Session {
 	s := new(Session)
+	s.Ctx = newContext()
 	s.Username = ""
 	if cookie, err := r.Cookie("Session_ID"); err != http.ErrNoCookie {
 		s.Cookie_Session = cookie
@@ -30,14 +31,13 @@ func NewSession(r *http.Request) *Session {
 	if cookie, err := r.Cookie("access_token"); err != http.ErrNoCookie {
 		s.Cookie_Access_Token = cookie
 	}
-	s.Ctx = newContext()
 	return s
 }
 
 func (s *Session) NewCookie(name string) {
 	switch name {
 	case "Session_ID":
-		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 0, HttpOnly: true}
 	case "token":
 		s.Cookie_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "admin":
@@ -54,13 +54,21 @@ func (s *Session) DestroyCookie(w http.ResponseWriter) {
 	s.setCookies(w, &cookie)
 	cookie = http.Cookie{Name: "admin", MaxAge: -1}
 	s.setCookies(w, &cookie)
+	cookie = http.Cookie{Name: "access_token", MaxAge: -1}
+	s.setCookies(w, &cookie)
 }
 
 func (s *Session) setCookies(w http.ResponseWriter, cookie *http.Cookie) {
+	if cookie == nil {
+		return
+	}
 	http.SetCookie(w, cookie)
 }
 
 func (s *Session) SetCookies(w http.ResponseWriter, cookie *http.Cookie) {
+	if cookie == nil {
+		return
+	}
 	s.setCookies(w, cookie)
 }
 
