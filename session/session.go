@@ -37,7 +37,7 @@ func NewSession(r *http.Request) *Session {
 func (s *Session) NewCookie(name string) {
 	switch name {
 	case "Session_ID":
-		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 0, HttpOnly: true}
+		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "token":
 		s.Cookie_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "admin":
