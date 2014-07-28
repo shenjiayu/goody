@@ -9,9 +9,9 @@ import (
 func (s *Session) Get() error {
 	db := models.OpenDB()
 	defer db.Close()
-	err := db.QueryRow("SELECT username FROM session_store WHERE session_id = $1 AND token = $2", s.Cookie_Session.Value, s.Cookie_Token.Value).Scan(&s.Username)
-	if err != nil {
-		return err
+	db.QueryRow("SELECT username FROM session_store WHERE session_id = $1 AND token = $2", s.Cookie_Session.Value, s.Cookie_Token.Value).Scan(&s.Username)
+	if s.Username == "" {
+		return errors.New("no record.")
 	}
 	return nil
 }
