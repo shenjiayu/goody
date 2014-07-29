@@ -7,29 +7,27 @@ import (
 )
 
 type Session struct {
-	Ctx                 Context
-	Username            string
-	Cookie_Session      *http.Cookie
-	Cookie_Admin        *http.Cookie
-	Cookie_Token        *http.Cookie
-	Cookie_Access_Token *http.Cookie
+	Ctx      Context
+	Username string
+	Cookies  map[string]*http.Cookie
 }
 
 func NewSession(r *http.Request) *Session {
 	s := new(Session)
 	s.Ctx = newContext()
 	s.Username = ""
+	s.Cookies = make(map[string]*http.Cookie)
 	if cookie, err := r.Cookie("Session_ID"); err != http.ErrNoCookie {
-		s.Cookie_Session = cookie
+		s.Cookies["Session_ID"] = cookie
 	}
 	if cookie, err := r.Cookie("admin"); err != http.ErrNoCookie {
-		s.Cookie_Admin = cookie
+		s.Cookies["admin"] = cookie
 	}
 	if cookie, err := r.Cookie("token"); err != http.ErrNoCookie {
-		s.Cookie_Token = cookie
+		s.Cookies["token"] = cookie
 	}
 	if cookie, err := r.Cookie("access_token"); err != http.ErrNoCookie {
-		s.Cookie_Access_Token = cookie
+		s.Cookies["access_token"] = cookie
 	}
 	return s
 }
@@ -37,13 +35,13 @@ func NewSession(r *http.Request) *Session {
 func (s *Session) NewCookie(name string) {
 	switch name {
 	case "Session_ID":
-		s.Cookie_Session = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+		s.Cookies["Session_ID"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "token":
-		s.Cookie_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+		s.Cookies["token"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "admin":
-		s.Cookie_Admin = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+		s.Cookies["admin"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "access_token":
-		s.Cookie_Access_Token = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+		s.Cookies["access_token"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	}
 }
 
