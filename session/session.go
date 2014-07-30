@@ -46,14 +46,10 @@ func (s *Session) NewCookie(name string) {
 }
 
 func (s *Session) DestroyCookie(w http.ResponseWriter) {
-	cookie := http.Cookie{Name: "Session_ID", MaxAge: -1}
-	s.setCookies(w, &cookie)
-	cookie = http.Cookie{Name: "token", MaxAge: -1}
-	s.setCookies(w, &cookie)
-	cookie = http.Cookie{Name: "admin", MaxAge: -1}
-	s.setCookies(w, &cookie)
-	cookie = http.Cookie{Name: "access_token", MaxAge: -1}
-	s.setCookies(w, &cookie)
+	for _, v := range s.Cookies {
+		v = &http.Cookie{Name: v.Name, MaxAge: -1}
+		s.setCookies(w, v)
+	}
 }
 
 func (s *Session) setCookies(w http.ResponseWriter, cookie *http.Cookie) {
