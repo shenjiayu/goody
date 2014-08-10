@@ -6,14 +6,14 @@ import (
 	"net/http"
 )
 
-func (s *Session) Get() error {
+func (s *Session) Get() (string, error) {
 	db := models.OpenDB()
 	defer db.Close()
 	db.QueryRow("SELECT username FROM session_store WHERE session_id = $1 AND token = $2", s.Cookies["Session_ID"].Value, s.Cookies["token"].Value).Scan(&s.Username)
 	if s.Username == "" {
-		return errors.New("no record.")
+		return "", errors.New("no record.")
 	}
-	return nil
+	return s.Username, nil
 }
 
 func (s *Session) New(w http.ResponseWriter) error {
