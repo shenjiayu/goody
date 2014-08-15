@@ -52,6 +52,14 @@ func (s *Session) DestroyCookie(w http.ResponseWriter) {
 	}
 }
 
+func (s *Session) NotFound(w http.ResponseWriter, r *http.Request) {
+	http.NotFound(w, r)
+}
+
+func (s *Session) Redirect(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+}
+
 func (s *Session) setCookies(w http.ResponseWriter, cookie *http.Cookie) {
 	if cookie == nil {
 		return
