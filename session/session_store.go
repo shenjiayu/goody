@@ -22,29 +22,16 @@ func (s *Session) New(w http.ResponseWriter) error {
 	var str string
 	db.QueryRow("SELECT username FROM session_store WHERE username = $1", s.Username).Scan(&str)
 	if str == "" {
-		if s.Cookies["access_token"] == nil {
-			stmt, err := db.Prepare("INSERT INTO session_store (username, session_id, token)VALUES($1, $2, $3)")
-			if err != nil {
-				return errors.New("error on preparing")
-			}
-			_, err = stmt.Exec(s.Username, s.Cookies["Session_ID"].Value, s.Cookies["token"].Value)
-			if err != nil {
-				return errors.New("error on inserting")
-			}
-		} else {
-			stmt, err := db.Prepare("INSERT INTO session_store (username, session_id, token, access_token)VALUES($1, $2, $3, $4)")
-			if err != nil {
-				return errors.New("error on preparing")
-			}
-			_, err = stmt.Exec(s.Username, s.Cookies["Session_ID"].Value, s.Cookies["token"].Value, s.Cookies["access_token"].Value)
-			if err != nil {
-				return errors.New("error on inserting")
-			}
-			db.QueryRow("SELECT access_token FROM session_store WHERE username = $1", s.Username).Scan(&s.Cookies["access_token"].Value)
+		stmt, err := db.Prepare("INSERT INTO session_store (username, session_id, token)VALUES($1, $2, $3)")
+		if err != nil {
+			return errors.New("error on preparing")
+		}
+		_, err = stmt.Exec(s.Username, s.Cookies["Session_ID"].Value, s.Cookies["token"].Value)
+		if err != nil {
+			return errors.New("error on inserting")
 		}
 		s.setCookies(w, s.Cookies["Session_ID"])
 		s.setCookies(w, s.Cookies["token"])
-		s.setCookies(w, s.Cookies["access_token"])
 		return nil
 	}
 	if err := s.Save(w); err != nil {
@@ -70,9 +57,7 @@ func (s *Session) Save(w http.ResponseWriter) error {
 	if err != nil {
 		return errors.New("error on saving")
 	}
-	db.QueryRow("SELECT access_token FROM session_store WHERE username = $1", s.Username).Scan(&s.Cookies["access_token"].Value)
 	s.setCookies(w, s.Cookies["Session_ID"])
 	s.setCookies(w, s.Cookies["token"])
-	s.setCookies(w, s.Cookies["access_token"])
 	return nil
 }

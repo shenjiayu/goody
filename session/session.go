@@ -26,9 +26,6 @@ func NewSession(r *http.Request) *Session {
 	if cookie, err := r.Cookie("token"); err != http.ErrNoCookie {
 		s.Cookies["token"] = cookie
 	}
-	if cookie, err := r.Cookie("access_token"); err != http.ErrNoCookie {
-		s.Cookies["access_token"] = cookie
-	}
 	return s
 }
 
@@ -40,8 +37,6 @@ func (s *Session) NewCookie(name string) {
 		s.Cookies["token"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	case "admin":
 		s.Cookies["admin"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
-	case "access_token":
-		s.Cookies["access_token"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
 	}
 }
 
