@@ -43,7 +43,7 @@ func (s *Session) DestroyCookie(w http.ResponseWriter) {
 }
 
 func (s *Session) NotFound(w http.ResponseWriter, r *http.Request) {
-	http.NotFound(w, r)
+	http.Redirect(w, r, "/404", http.StatusMovedPermanently)
 }
 
 func (s *Session) Redirect(w http.ResponseWriter, r *http.Request) {
