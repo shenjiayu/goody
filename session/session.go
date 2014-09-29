@@ -46,8 +46,8 @@ func (s *Session) NotFound(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/404", http.StatusMovedPermanently)
 }
 
-func (s *Session) Redirect(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/", http.StatusMovedPermanently)
+func (s *Session) Redirect(w http.ResponseWriter, r *http.Request, redirect_url string) {
+	http.Redirect(w, r, redirect_url, http.StatusMovedPermanently)
 }
 
 func (s *Session) SetCookies(w http.ResponseWriter, cookie *http.Cookie) {
