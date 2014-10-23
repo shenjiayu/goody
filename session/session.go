@@ -4,57 +4,72 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"net/http"
+	"time"
 )
 
 type Session struct {
-	Ctx      Context
+	ID   string
+	Ctx  Context
+	name string
+	//Values  map[interface{}]interface{}
 	Username string
-	Cookies  map[string]*http.Cookie
+	Options  *Options
+	store    Store
+	IsNew    bool
 }
 
-func NewSession(r *http.Request) *Session {
-	s := new(Session)
-	s.Ctx = newContext()
-	s.Username = ""
-	s.Cookies = make(map[string]*http.Cookie)
-	if cookie, err := r.Cookie("Session_ID"); err != http.ErrNoCookie {
-		s.Cookies["Session_ID"] = cookie
-	}
-	if cookie, err := r.Cookie("admin"); err != http.ErrNoCookie {
-		s.Cookies["admin"] = cookie
-	}
-	return s
+type Options struct {
+	Path     string
+	Domain   string
+	MaxAge   int
+	Secure   bool
+	HttpOnly bool
 }
 
-func (s *Session) NewCookie(name string) {
-	switch name {
-	case "Session_ID":
-		s.Cookies["Session_ID"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
-	case "admin":
-		s.Cookies["admin"] = &http.Cookie{Name: name, Path: "/", MaxAge: 72000, HttpOnly: true}
+func NewSession(store Store, name string) *Session {
+	return &Session{
+		Ctx:  newContext(),
+		name: name,
+		//Values: make(map[interface{}]interface{}),
+		Options: DefaultOptions(),
+		store:   store,
 	}
 }
 
-func (s *Session) DestroyCookie(w http.ResponseWriter) {
-	for _, v := range s.Cookies {
-		v = &http.Cookie{Name: v.Name, MaxAge: -1}
-		s.SetCookies(w, v)
+func DefaultOptions() *Options {
+	return &Options{
+		Path:     "/",
+		Domain:   "coddict.co",
+		MaxAge:   720000,
+		HttpOnly: true,
 	}
 }
 
-func (s *Session) NotFound(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/404", http.StatusMovedPermanently)
-}
-
-func (s *Session) Redirect(w http.ResponseWriter, r *http.Request, redirect_url string) {
-	http.Redirect(w, r, redirect_url, http.StatusMovedPermanently)
-}
-
-func (s *Session) SetCookies(w http.ResponseWriter, cookie *http.Cookie) {
-	if cookie == nil {
-		return
+func (s *Session) NewCookie(name, value string, options *Options) *http.Cookie {
+	cookie := &http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     options.Path,
+		Domain:   options.Domain,
+		MaxAge:   options.MaxAge,
+		Secure:   options.Secure,
+		HttpOnly: options.HttpOnly,
 	}
-	http.SetCookie(w, cookie)
+	if options.MaxAge > 0 {
+		d := time.Duration(options.MaxAge) * time.Second
+		cookie.Expires = time.Now().Add(d)
+	} else if options.MaxAge < 0 {
+		cookie.Expires = time.Unix(1, 0)
+	}
+	return cookie
+}
+
+func (s *Session) Name() string {
+	return s.name
+}
+
+func (s *Session) Store() Store {
+	return s.store
 }
 
 func (s *Session) NewID() string {
