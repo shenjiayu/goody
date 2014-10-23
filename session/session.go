@@ -3,19 +3,30 @@ package session
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 )
 
 type Session struct {
-	ID   string
-	Ctx  Context
-	name string
-	//Values  map[interface{}]interface{}
-	Username string
-	Options  *Options
-	store    Store
-	IsNew    bool
+	ID      string
+	Ctx     Context
+	name    string
+	Values  Values
+	Options *Options
+	store   Store
+	IsNew   bool
+}
+
+func NewSession(store Store, name string) *Session {
+	return &Session{
+		Ctx:     newContext(),
+		name:    name,
+		Values:  NewValues(),
+		Options: DefaultOptions(),
+		store:   store,
+	}
 }
 
 type Options struct {
@@ -26,23 +37,20 @@ type Options struct {
 	HttpOnly bool
 }
 
-func NewSession(store Store, name string) *Session {
-	return &Session{
-		Ctx:  newContext(),
-		name: name,
-		//Values: make(map[interface{}]interface{}),
-		Options: DefaultOptions(),
-		store:   store,
-	}
-}
-
 func DefaultOptions() *Options {
 	return &Options{
 		Path:     "/",
-		Domain:   "coddict.co",
 		MaxAge:   720000,
 		HttpOnly: true,
 	}
+}
+
+type Values struct {
+	Username string `json:"username"`
+}
+
+func NewValues() Values {
+	return Values{}
 }
 
 func (s *Session) NewCookie(name, value string, options *Options) *http.Cookie {
@@ -50,7 +58,6 @@ func (s *Session) NewCookie(name, value string, options *Options) *http.Cookie {
 		Name:     name,
 		Value:    value,
 		Path:     options.Path,
-		Domain:   options.Domain,
 		MaxAge:   options.MaxAge,
 		Secure:   options.Secure,
 		HttpOnly: options.HttpOnly,
@@ -74,6 +81,16 @@ func (s *Session) Store() Store {
 
 func (s *Session) NewID() string {
 	return generateID()
+}
+
+func (s *Session) EncodingToJson() string {
+	data, _ := json.Marshal(s.Values)
+	return fmt.Sprintf("%s", data)
+}
+
+func (s *Session) DecodingFromJson(data string) string {
+	json.Unmarshal([]byte(data), &s.Values)
+	return s.Values.Username
 }
 
 func generateID() string {

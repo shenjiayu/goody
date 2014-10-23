@@ -8,7 +8,7 @@ import (
 
 type Store interface {
 	//initiate a new session (normally saved it into the cookie of users)
-	New(*http.Request, string) (*Session, error)
+	New(*http.Request, http.ResponseWriter, string) (*Session, error)
 	//save the session into backend (redis)
 	Save(*http.Request, http.ResponseWriter, *Session) error
 	//get the session out of the backend (redis)
@@ -16,7 +16,6 @@ type Store interface {
 }
 
 type RedisStore struct {
-	Options *Options
 }
 
 func newPool(server string) *redis.Pool {
@@ -42,49 +41,20 @@ var (
 	pool = newPool(":6379")
 )
 
-func (r *RedisStore) Get(req *http.Request, name string) (*Session, error) {
-	conn := pool.Get()
-	defer conn.Close()
-	s := &Session{}
-	if cookie, err := req.Cookie(name); err == nil {
-		username, err := redis.String(conn.Do("GET", "session_"+cookie.Value))
-		if err != nil {
-			return nil, err
-		}
-		s.ID = cookie.Value
-		s.name = name
-		s.store = r
-		s.Username = username
-	}
-	return s, nil
-}
-
-func (r *RedisStore) New(req *http.Request, name string) (*Session, error) {
+func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) (*Session, error) {
 	session := NewSession(r, name)
 	session.IsNew = true
 	if cookie, err := req.Cookie(name); err == nil {
 		session.ID = cookie.Value
-		ok, err2 := r.load(session)
-		session.IsNew = !(err2 == nil && ok)
+		if ok, username, err2 := r.load(session); err2 == nil && ok {
+			session.Values.Username = username
+			session.IsNew = false
+		} else {
+			session.Options.MaxAge = -1
+			http.SetCookie(w, session.NewCookie(session.Name(), "", session.Options))
+		}
 	}
 	return session, nil
-}
-
-func (r *RedisStore) load(s *Session) (bool, error) {
-	conn := pool.Get()
-	defer conn.Close()
-	if err := conn.Err(); err != nil {
-		return false, err
-	}
-	data, err := redis.String(conn.Do("GET", "session_"+s.ID))
-	if err != nil {
-		return false, err
-	}
-	//no asociated value for such key
-	if data == "" {
-		return false, nil
-	}
-	return true, nil
 }
 
 func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, s *Session) error {
@@ -92,7 +62,7 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, s *Session) 
 		if err := r.delete(s); err != nil {
 			return err
 		}
-		http.SetCookie(w, s.NewCookie("Session_ID", "", s.Options))
+		http.SetCookie(w, s.NewCookie(s.Name(), "", s.Options))
 	} else {
 		if s.ID == "" {
 			s.ID = s.NewID()
@@ -100,19 +70,53 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, s *Session) 
 		if err := r.save(s); err != nil {
 			return err
 		}
-		http.SetCookie(w, s.NewCookie("Session_ID", s.ID, s.Options))
+		http.SetCookie(w, s.NewCookie(s.Name(), s.ID, s.Options))
 	}
 	return nil
 }
 
+func (r *RedisStore) Get(req *http.Request, name string) (*Session, error) {
+	conn := pool.Get()
+	defer conn.Close()
+	s := &Session{}
+	if cookie, err := req.Cookie(name); err == nil {
+		_, err := redis.String(conn.Do("GET", "session_"+cookie.Value))
+		if err != nil {
+			return nil, err
+		}
+		s.ID = cookie.Value
+		s.name = name
+		s.store = r
+	}
+	return s, nil
+}
+
+func (r *RedisStore) load(s *Session) (bool, string, error) {
+	conn := pool.Get()
+	defer conn.Close()
+	if err := conn.Err(); err != nil {
+		return false, "", err
+	}
+	data, err := redis.String(conn.Do("GET", "session_"+s.ID))
+	if err != nil {
+		return false, "", err
+	}
+	//no asociated value for such key
+	if data == "" {
+		return false, "", nil
+	}
+	username := s.DecodingFromJson(data)
+	return true, username, nil
+}
+
 func (r *RedisStore) save(s *Session) error {
-	//data := s.EncodingToJson()
+	data := s.EncodingToJson()
 	conn := pool.Get()
 	defer conn.Close()
 	if err := conn.Err(); err != nil {
 		return err
 	}
-	_, err := conn.Do("SETEX", "session_"+s.ID, s.Options.MaxAge, s.Username)
+	_, err := conn.Do("SETEX", "session_"+s.ID, s.Options.MaxAge, data)
 	return err
 }
 
