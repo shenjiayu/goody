@@ -10,23 +10,42 @@ import (
 )
 
 type Session struct {
-	ID      string
 	Ctx     Context
-	name    string
-	Values  Values
-	Options *Options
-	store   Store
-	IsNew   bool
+	Cache   *Cache
+	IsLogin bool
 }
 
 func NewSession(store Store, name string) *Session {
 	return &Session{
 		Ctx:     newContext(),
+		Cache:   NewCache(store, name),
+		IsLogin: false,
+	}
+}
+
+type Cache struct {
+	ID      string
+	name    string
+	Values  Values
+	Options *Options
+	store   Store
+}
+
+func NewCache(store Store, name string) *Cache {
+	return &Cache{
 		name:    name,
 		Values:  NewValues(),
 		Options: DefaultOptions(),
 		store:   store,
 	}
+}
+
+type Values struct {
+	Username string `json:"username"`
+}
+
+func NewValues() Values {
+	return Values{}
 }
 
 type Options struct {
@@ -45,15 +64,7 @@ func DefaultOptions() *Options {
 	}
 }
 
-type Values struct {
-	Username string `json:"username"`
-}
-
-func NewValues() Values {
-	return Values{}
-}
-
-func (s *Session) NewCookie(name, value string, options *Options) *http.Cookie {
+func (c *Cache) NewCookie(name, value string, options *Options) *http.Cookie {
 	cookie := &http.Cookie{
 		Name:     name,
 		Value:    value,
@@ -71,26 +82,26 @@ func (s *Session) NewCookie(name, value string, options *Options) *http.Cookie {
 	return cookie
 }
 
-func (s *Session) Name() string {
-	return s.name
+func (c *Cache) Name() string {
+	return c.name
 }
 
-func (s *Session) Store() Store {
-	return s.store
+func (c *Cache) Store() Store {
+	return c.store
 }
 
-func (s *Session) NewID() string {
+func (c *Cache) NewID() string {
 	return generateID()
 }
 
-func (s *Session) EncodingToJson() string {
-	data, _ := json.Marshal(s.Values)
+func (c *Cache) EncodingToJson() string {
+	data, _ := json.Marshal(c.Values)
 	return fmt.Sprintf("%s", data)
 }
 
-func (s *Session) DecodingFromJson(data string) string {
-	json.Unmarshal([]byte(data), &s.Values)
-	return s.Values.Username
+func (c *Cache) DecodingFromJson(data string) string {
+	json.Unmarshal([]byte(data), &c.Values)
+	return c.Values.Username
 }
 
 func generateID() string {
