@@ -46,8 +46,7 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) 
 	session := NewSession(r, name)
 	if cookie, err := req.Cookie(name); err == nil {
 		session.Cache.ID = cookie.Value
-		if ok, username, err2 := r.load(session.Cache); err2 == nil && ok {
-			session.Cache.Values.Username = username
+		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
 			session.IsLogin = true
 		} else {
 			session.Cache.Options.MaxAge = -1
@@ -66,6 +65,12 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 	} else {
 		if c.ID == "" {
 			c.ID = c.NewID()
+		}
+		for _, v := range admin_accounts {
+			if c.Values.Username == v {
+				c.Values.Level = 1
+				break
+			}
 		}
 		if err := r.save(c); err != nil {
 			fmt.Println(err)
@@ -92,22 +97,22 @@ func (r *RedisStore) Get(req *http.Request, name string) (*Cache, error) {
 	return c, nil
 }
 
-func (r *RedisStore) load(c *Cache) (bool, string, error) {
+func (r *RedisStore) load(c *Cache) (bool, error) {
 	conn := pool.Get()
 	defer conn.Close()
 	if err := conn.Err(); err != nil {
-		return false, "", err
+		return false, err
 	}
 	data, err := redis.String(conn.Do("GET", "session_"+c.ID))
 	if err != nil {
-		return false, "", err
+		return false, err
 	}
 	//no asociated value for such key
 	if data == "" {
-		return false, "", nil
+		return false, nil
 	}
-	username := c.DecodingFromJson(data)
-	return true, username, nil
+	c.DecodingFromJson(data)
+	return true, nil
 }
 
 func (r *RedisStore) save(c *Cache) error {

@@ -9,10 +9,16 @@ import (
 	"time"
 )
 
+//admin account
+var (
+	admin_accounts = []string{"shenjiayu"}
+)
+
 type Session struct {
-	Ctx     Context
-	Cache   *Cache
-	IsLogin bool
+	Ctx         Context
+	Cache       *Cache
+	IsLogin     bool
+	IsSuperUser bool
 }
 
 func NewSession(store Store, name string) *Session {
@@ -42,6 +48,7 @@ func NewCache(store Store, name string) *Cache {
 
 type Values struct {
 	Username string `json:"username"`
+	Level    int    `json:"level"`
 }
 
 func NewValues() Values {
@@ -99,9 +106,8 @@ func (c *Cache) EncodingToJson() string {
 	return fmt.Sprintf("%s", data)
 }
 
-func (c *Cache) DecodingFromJson(data string) string {
+func (c *Cache) DecodingFromJson(data string) {
 	json.Unmarshal([]byte(data), &c.Values)
-	return c.Values.Username
 }
 
 func generateID() string {
