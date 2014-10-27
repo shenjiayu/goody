@@ -48,6 +48,9 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) 
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
 			session.IsLogin = true
+			if session.Cache.Values.Level == 1 {
+				session.IsSuperUser = true
+			}
 		} else {
 			session.Cache.Options.MaxAge = -1
 			http.SetCookie(w, session.Cache.NewCookie(session.Cache.Name(), "", session.Cache.Options))

@@ -23,9 +23,10 @@ type Session struct {
 
 func NewSession(store Store, name string) *Session {
 	return &Session{
-		Ctx:     newContext(),
-		Cache:   NewCache(store, name),
-		IsLogin: false,
+		Ctx:         newContext(),
+		Cache:       NewCache(store, name),
+		IsLogin:     false,
+		IsSuperUser: false,
 	}
 }
 
