@@ -1,5 +1,3 @@
 goody
 =====
-Session and Context used in my website~
-
-`www.coddict.co`
+None of These tools / code is safe in any project. Be sensitive to use it. Not recommended, Because i am a newbie.
