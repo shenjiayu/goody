@@ -1,9 +1,5 @@
 package session
 
-import (
-	"fmt"
-)
-
 //admin account
 var (
 	admin_accounts = []string{"shenjiayu"}

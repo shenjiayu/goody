@@ -16,11 +16,20 @@ type location struct {
 }
 
 func (l *location) invoke(w http.ResponseWriter, r *http.Request, args ...string) {
+	//init a new environment
 	env := session.NewEnv(w, r)
-	/*
-		if err := env.Session.ProcessRequest(env); err != nil {
-			return
-		}*/
+	if err := env.ProcessRequest(); err != nil {
+		return
+	} else {
+		path := r.URL.Path
+		if (path != "/user/login" && path != "/user/register" && path != "/selfads/newads" && path != "/selfads/allads") && r.Method == "POST" && env.Session.IsLogin == false {
+			fmt.Fprintf(w, "<script>swal({title: '请先登录', type: 'error'});</script>")
+		} else if (path == "/user/login" && path == "/user/register") && env.Session.IsLogin == true {
+			http.Redirect(w, r, "/loading", http.StatusOK)
+		} else if env.Session.IsSuperUser == false && (strings.HasPrefix(path, "/admin_control")) {
+			http.NotFound(w, r)
+		}
+	}
 	envValue := reflect.ValueOf(env)
 	m, ok := l.methods[r.Method]
 	if !ok {
