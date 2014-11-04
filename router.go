@@ -2,7 +2,9 @@ package goody
 
 import (
 	"fmt"
+	"github.com/shenjiayu/goody/session"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -19,8 +21,9 @@ func newRouter() *router {
 	}
 }
 
-func (router *router) newRegLocation(pattern string, l *location) error {
+func (router *router) registerLocation(pattern string, l *location) error {
 	meta := regexp.QuoteMeta(pattern)
+	//if meta is same as pattern which is not a regular expression
 	if meta == pattern {
 		if _, ok := router.literalLocs[pattern]; ok {
 			return fmt.Errorf("literal %s location has been registered", pattern)
@@ -55,21 +58,47 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 	if err != nil {
 		return err
 	}
-	if err := router.newRegLocation(pattern, l); err != nil {
+	if err := router.registerLocation(pattern, l); err != nil {
 		return err
 	}
 	return nil
 }
 
+func (router *router) processRequest() error {
+	return nil
+}
+
+func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
+	env := session.NewEnv(w, r)
+
+	envValue := reflect.ValueOf(env)
+	m, ok := l.methods[r.Method]
+	if !ok {
+		env.SetStatus(http.StatusMethodNotAllowed)
+	}
+	//init the arguments
+	in := make([]reflect.Value, m.Type().NumIn())
+	//the first argument is '*session.Env'.
+	in[0] = envValue
+	//iterate over the passed arguments 'args' to in variables.
+	for i, v := range args {
+		in[i+1] = reflect.ValueOf(v)
+	}
+	//call corresponding method and pass in the 'in' variable.
+	m.Call(in)
+}
+
 func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	if l, ok := router.literalLocs[path]; ok {
-		l.invoke(w, r)
+		router.CallMethod(w, r, l)
 	} else {
+		//iterate over all regular expression locations
 		for _, l := range router.regexpLocs {
+			//args will be nil, if the regular expression cannot find submatch of this path
 			args := l.regexpPattern.FindStringSubmatch(path)
 			if args != nil {
-				l.invoke(w, r, args[1:]...)
+				router.CallMethod(w, r, l, args[1:]...)
 				return
 			}
 		}

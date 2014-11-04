@@ -2,8 +2,6 @@ package goody
 
 import (
 	"fmt"
-	"github.com/shenjiayu/goody/session"
-	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
@@ -13,34 +11,6 @@ type location struct {
 	pattern       string
 	regexpPattern *regexp.Regexp
 	methods       map[string]reflect.Value
-}
-
-func (l *location) invoke(w http.ResponseWriter, r *http.Request, args ...string) {
-	//init a new environment
-	env := session.NewEnv(w, r)
-	if err := env.ProcessRequest(); err != nil {
-		return
-	} else {
-		path := r.URL.Path
-		if (path != "/user/login" && path != "/user/register" && path != "/selfads/newads" && path != "/selfads/allads") && r.Method == "POST" && env.Session.IsLogin == false {
-			fmt.Fprintf(w, "<script>swal({title: '请先登录', type: 'error'});</script>")
-		} else if (path == "/user/login" && path == "/user/register") && env.Session.IsLogin == true {
-			http.Redirect(w, r, "/loading", http.StatusOK)
-		} else if env.Session.IsSuperUser == false && (strings.HasPrefix(path, "/admin_control")) {
-			http.NotFound(w, r)
-		}
-	}
-	envValue := reflect.ValueOf(env)
-	m, ok := l.methods[r.Method]
-	if !ok {
-		env.SetStatus(http.StatusMethodNotAllowed)
-	}
-	in := make([]reflect.Value, m.Type().NumIn())
-	in[0] = envValue
-	for i, v := range args {
-		in[i+1] = reflect.ValueOf(v)
-	}
-	m.Call(in)
 }
 
 var supportMethods = []string{"Get", "Post", "Put", "Head", "Delete"}

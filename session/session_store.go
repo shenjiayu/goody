@@ -14,6 +14,8 @@ type Store interface {
 	Save(*http.Request, http.ResponseWriter, *Cache) error
 	//get the session out of the backend (redis)
 	Get(*http.Request, string) (*Cache, error)
+	//purge the storage of session
+	//Delete(*http.Request) error
 }
 
 type RedisStore struct {

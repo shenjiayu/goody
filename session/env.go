@@ -9,7 +9,6 @@ type Env struct {
 	Request        *http.Request
 	Session        *Session
 	Status         int
-	finished       bool
 }
 
 func NewEnv(w http.ResponseWriter, r *http.Request) *Env {
@@ -19,19 +18,6 @@ func NewEnv(w http.ResponseWriter, r *http.Request) *Env {
 	store := &RedisStore{}
 	env.Session = NewSession(store, "Session_ID")
 	return env
-}
-
-func (e *Env) ProcessRequest() error {
-	if session, err := e.Session.Cache.store.New(e.Request, e.ResponseWriter, "Session_ID"); err != nil {
-		e.Session = session
-		return err
-	}
-	return nil
-}
-
-func (e *Env) ProcessResponse() error {
-	//none
-	return nil
 }
 
 func (e *Env) SetStatus(status int) {
