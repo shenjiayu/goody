@@ -19,6 +19,10 @@ func (app *App) Handle(pattern string, handler interface{}) error {
 	return app.router.Handle(pattern, handler)
 }
 
+func (app *App) ProcessRequest(function interface{}) {
+	app.router.processRequest(function)
+}
+
 func (app *App) Run(SSL bool) error {
 	http.Handle("/", app.router)
 	if SSL {

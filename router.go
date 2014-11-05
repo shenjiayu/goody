@@ -64,13 +64,15 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 	return nil
 }
 
-func (router *router) processRequest() error {
+func (router *router) processRequest(function interface{}) error {
+	kind := reflect.ValueOf(function).Kind()
+	fmt.Println(kind)
 	return nil
 }
 
 func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
 	env := session.NewEnv(w, r)
-
+	router.processRequest(function)
 	envValue := reflect.ValueOf(env)
 	m, ok := l.methods[r.Method]
 	if !ok {
@@ -96,9 +98,9 @@ func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//iterate over all regular expression locations
 		for _, l := range router.regexpLocs {
 			//args will be nil, if the regular expression cannot find submatch of this path
-			args := l.regexpPattern.FindStringSubmatch(path)
-			if args != nil {
-				router.CallMethod(w, r, l, args[1:]...)
+			arg := l.regexpPattern.FindStringSubmatch(path)
+			if arg != nil {
+				router.CallMethod(w, r, l, arg[1])
 				return
 			}
 		}
