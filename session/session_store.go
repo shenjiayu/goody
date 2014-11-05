@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	"fmt"
 	"github.com/garyburd/redigo/redis"
 	"net/http"
@@ -15,7 +16,7 @@ type Store interface {
 	//get the session out of the backend (redis)
 	Get(*http.Request, string) (*Cache, error)
 	//purge the storage of session
-	//Delete(*http.Request) error
+	Delete(http.ResponseWriter, *Cache) error
 }
 
 type RedisStore struct {
@@ -100,6 +101,18 @@ func (r *RedisStore) Get(req *http.Request, name string) (*Cache, error) {
 		c.store = r
 	}
 	return c, nil
+}
+
+func (r *RedisStore) Delete(w http.ResponseWriter, c *Cache) error {
+	if c == nil {
+		return errors.New("cache cannot be nil")
+	}
+	if err := r.delete(c); err != nil {
+		return err
+	}
+	c.Options.MaxAge = -1
+	http.SetCookie(w, c.NewCookie(c.Name(), "", c.Options))
+	return nil
 }
 
 func (r *RedisStore) load(c *Cache) (bool, error) {
