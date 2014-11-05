@@ -64,15 +64,21 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 	return nil
 }
 
-func (router *router) processRequest(function interface{}) error {
-	kind := reflect.ValueOf(function).Kind()
-	fmt.Println(kind)
+func (router *router) processRequest(env *session.Env) error {
+	store := session.RedisStore{}
+	if s, err := store.New(env.Request, env.ResponseWriter, "Session_ID"); err != nil {
+		return err
+	} else {
+		env.Session = s
+	}
 	return nil
 }
 
 func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
 	env := session.NewEnv(w, r)
-	router.processRequest(function)
+	if err := router.processRequest(env); err != nil {
+		return
+	}
 	envValue := reflect.ValueOf(env)
 	m, ok := l.methods[r.Method]
 	if !ok {

@@ -23,3 +23,7 @@ func NewEnv(w http.ResponseWriter, r *http.Request) *Env {
 func (e *Env) SetStatus(status int) {
 	e.Status = status
 }
+
+func (e *Env) Redirect(url string) {
+	http.Redirect(e.ResponseWriter, e.Request, url, http.StatusFound)
+}
