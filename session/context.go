@@ -33,3 +33,9 @@ func (c Context) Delete(key interface{}) {
 	delete(c, key)
 	lock.Unlock()
 }
+
+func (c Context) Purge() {
+	for k, _ := range c {
+		c.Delete(k)
+	}
+}

@@ -65,7 +65,7 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 }
 
 func (router *router) processRequest(env *session.Env) error {
-	store := session.RedisStore{}
+	store := env.Session.Cache.Store()
 	if s, err := store.New(env.Request, env.ResponseWriter, "Session_ID"); err != nil {
 		return err
 	} else {
