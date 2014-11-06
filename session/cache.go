@@ -2,6 +2,7 @@ package session
 
 import (
 	"crypto/rand"
+	"crypto/sha1"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -29,6 +30,7 @@ func NewCache(store Store, name string) *Cache {
 type Values struct {
 	Username string `json:"username"`
 	Level    int    `json:"level"`
+	Token    string `json:"Token"`
 }
 
 func NewValues() Values {
@@ -81,6 +83,14 @@ func (c *Cache) NewID() string {
 	return generateID()
 }
 
+func (c *Cache) NewToken() string {
+	h := sha1.New()
+	buf := make([]byte, 0)
+	buf, _ = time.Now().MarshalBinary()
+	h.Write(buf)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 func (c *Cache) EncodingToJson() string {
 	data, _ := json.Marshal(c.Values)
 	return fmt.Sprintf("%s", data)
@@ -91,7 +101,7 @@ func (c *Cache) DecodingFromJson(data string) {
 }
 
 func generateID() string {
-	buf := make([]byte, 40)
+	buf := make([]byte, 20)
 	if n, err := rand.Read(buf); err == nil {
 		return base64.URLEncoding.EncodeToString(buf[:n])
 	}

@@ -50,14 +50,24 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) 
 	if cookie, err := req.Cookie(name); err == nil {
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
-			session.IsLogin = true
-			if session.Cache.Values.Level == 1 {
-				session.IsSuperUser = true
+			if session.Cache.Values.Username != "" {
+				session.IsLogin = true
+				if session.Cache.Values.Level == 1 {
+					session.IsSuperUser = true
+				}
 			}
 		} else {
 			session.Cache.Options.MaxAge = -1
 			http.SetCookie(w, session.Cache.NewCookie(session.Cache.Name(), "", session.Cache.Options))
 		}
+	} else if err == http.ErrNoCookie {
+		session.Cache.ID = session.Cache.NewID()
+		session.Cache.Values.Level = -1
+		session.Cache.Options.MaxAge = 7200
+		if err := r.Save(req, w, session.Cache); err != nil {
+			return nil, err
+		}
+		http.SetCookie(w, session.Cache.NewCookie(session.Cache.Name(), session.Cache.ID, session.Cache.Options))
 	}
 	return session, nil
 }

@@ -74,16 +74,26 @@ func (router *router) processRequest(env *session.Env) error {
 	return nil
 }
 
+func (router *router) processResponse(env *session.Env) error {
+	if env.Tpl != "" {
+		if env.Session.Ctx != nil {
+			env.RenderTemplate(env.ResponseWriter, env.Tpl, env.Session.Ctx)
+		}
+		return nil
+	}
+	if env.Output != nil {
+		env.OutputJson(env.Output, env.ResponseWriter)
+	}
+	return nil
+}
+
 func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
 	env := session.NewEnv(w, r)
 	if err := router.processRequest(env); err != nil {
 		return
 	}
 	envValue := reflect.ValueOf(env)
-	m, ok := l.methods[r.Method]
-	if !ok {
-		env.SetStatus(http.StatusMethodNotAllowed)
-	}
+	m, _ := l.methods[r.Method]
 	//init the arguments
 	in := make([]reflect.Value, m.Type().NumIn())
 	//the first argument is '*session.Env'.
@@ -94,6 +104,9 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	}
 	//call corresponding method and pass in the 'in' variable.
 	m.Call(in)
+	if err := router.processResponse(env); err != nil {
+		return
+	}
 }
 
 func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
