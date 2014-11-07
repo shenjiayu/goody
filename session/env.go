@@ -35,8 +35,6 @@ func NewEnv(w http.ResponseWriter, r *http.Request) *Env {
 	env := new(Env)
 	env.ResponseWriter = w
 	env.Request = r
-	store := &RedisStore{}
-	env.Session = NewSession(store, "Session_ID")
 	return env
 }
 

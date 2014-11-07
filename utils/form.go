@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"html"
-	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -15,15 +15,15 @@ import (
 
 //it is an encapsulation on r.ParseForm() method
 //to auto-detect the struct that should be initiated to.
-func Form2Struct(r *http.Request, s interface{}) error {
-	if err := r.ParseForm(); err != nil {
-		return err
+func Form2Struct(form url.Values, s interface{}) error {
+	if form == nil {
+		return errors.New("form should not be nill")
 	}
 	if s == nil {
 		return errors.New("struct should not be nil")
 	}
 	value := reflect.ValueOf(s).Elem()
-	for k, v := range r.Form {
+	for k, v := range form {
 		escaped_data := html.EscapeString(v[0])
 		//the field of struct is Capitalized to be read from other packages
 		k = strings.Title(k)

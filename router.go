@@ -65,8 +65,16 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 }
 
 func (router *router) processRequest(env *session.Env) error {
-	store := env.Session.Cache.Store()
-	if s, err := store.New(env.Request, env.ResponseWriter, "Session_ID"); err != nil {
+	store := session.RedisStore{}
+	if s, err := store.New(env.Request, env.ResponseWriter); err != nil {
+		if s.ValidCsrf == false {
+			returnMsg := struct {
+				Status string `json:"status"`
+			}{
+				"CSRFERROR",
+			}
+			env.OutputJson(returnMsg, env.ResponseWriter)
+		}
 		return err
 	} else {
 		env.Session = s
@@ -78,10 +86,9 @@ func (router *router) processResponse(env *session.Env) error {
 	if env.Tpl != "" {
 		if env.Session.Ctx != nil {
 			env.RenderTemplate(env.ResponseWriter, env.Tpl, env.Session.Ctx)
+			return nil
 		}
-		return nil
-	}
-	if env.Output != nil {
+	} else if env.Output != nil {
 		env.OutputJson(env.Output, env.ResponseWriter)
 	}
 	return nil
@@ -92,6 +99,7 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	if err := router.processRequest(env); err != nil {
 		return
 	}
+	//fmt.Println(env.Session.ValidToken)
 	envValue := reflect.ValueOf(env)
 	m, _ := l.methods[r.Method]
 	//init the arguments

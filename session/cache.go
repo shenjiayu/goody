@@ -12,25 +12,35 @@ import (
 
 type Cache struct {
 	ID      string
-	name    string
 	Values  Values
 	Options *Options
 	store   Store
 }
 
-func NewCache(store Store, name string) *Cache {
+func NewCache(store Store) *Cache {
 	return &Cache{
-		name:    name,
 		Values:  NewValues(),
 		Options: DefaultOptions(),
 		store:   store,
 	}
 }
 
+//init anonymous users
+func AnonymousUser(store Store) *Cache {
+	c := new(Cache)
+	c.ID = c.NewID()
+	c.Values = NewValues()
+	c.Values.Csrf = c.NewCsrf()
+	c.Values.Level = -1
+	c.Options = DefaultOptions()
+	c.store = store
+	return c
+}
+
 type Values struct {
 	Username string `json:"username"`
 	Level    int    `json:"level"`
-	Token    string `json:"Token"`
+	Csrf     string `json:"Csrf"`
 }
 
 func NewValues() Values {
@@ -71,10 +81,6 @@ func (c *Cache) NewCookie(name, value string, options *Options) *http.Cookie {
 	return cookie
 }
 
-func (c *Cache) Name() string {
-	return c.name
-}
-
 func (c *Cache) Store() Store {
 	return c.store
 }
@@ -83,7 +89,7 @@ func (c *Cache) NewID() string {
 	return generateID()
 }
 
-func (c *Cache) NewToken() string {
+func (c *Cache) NewCsrf() string {
 	h := sha1.New()
 	buf := make([]byte, 0)
 	buf, _ = time.Now().MarshalBinary()

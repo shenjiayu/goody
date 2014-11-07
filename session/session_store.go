@@ -10,11 +10,11 @@ import (
 
 type Store interface {
 	//initiate a new session (normally saved it into the cookie of users)
-	New(*http.Request, http.ResponseWriter, string) (*Session, error)
+	New(*http.Request, http.ResponseWriter) (*Session, error)
 	//save the session into backend (redis)
 	Save(*http.Request, http.ResponseWriter, *Cache) error
 	//get the session out of the backend (redis)
-	Get(*http.Request, string) (*Cache, error)
+	Get(*http.Request) (*Cache, error)
 	//purge the storage of session
 	Delete(http.ResponseWriter, *Cache) error
 }
@@ -45,9 +45,9 @@ var (
 	pool = newPool(":6379")
 )
 
-func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) (*Session, error) {
-	session := NewSession(r, name)
-	if cookie, err := req.Cookie(name); err == nil {
+func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, error) {
+	session := NewSession(r)
+	if cookie, err := req.Cookie("Session_ID"); err == nil {
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
 			if session.Cache.Values.Username != "" {
@@ -56,18 +56,32 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter, name string) 
 					session.IsSuperUser = true
 				}
 			}
+			if req.Method != "GET" {
+				req.ParseForm()
+				token := req.FormValue("csrf")
+				if token != session.Cache.Values.Csrf {
+					session.SetCsrf(false)
+					return session, errors.New("invalid csrf token")
+				} else {
+					session.SetCsrf(true)
+					session.Cache.Values.Csrf = session.Cache.NewCsrf()
+					r.refreshToken(session.Cache)
+					session.Ctx.Set("form", req.Form)
+				}
+			}
 		} else {
-			session.Cache.Options.MaxAge = -1
-			http.SetCookie(w, session.Cache.NewCookie(session.Cache.Name(), "", session.Cache.Options))
+			session.Cache = AnonymousUser(r)
+			if err := r.Save(req, w, session.Cache); err != nil {
+				return nil, err
+			}
+			http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 		}
 	} else if err == http.ErrNoCookie {
-		session.Cache.ID = session.Cache.NewID()
-		session.Cache.Values.Level = -1
-		session.Cache.Options.MaxAge = 7200
+		session.Cache = AnonymousUser(r)
 		if err := r.Save(req, w, session.Cache); err != nil {
 			return nil, err
 		}
-		http.SetCookie(w, session.Cache.NewCookie(session.Cache.Name(), session.Cache.ID, session.Cache.Options))
+		http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 	}
 	return session, nil
 }
@@ -77,10 +91,13 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 		if err := r.delete(c); err != nil {
 			return err
 		}
-		http.SetCookie(w, c.NewCookie(c.Name(), "", c.Options))
+		http.SetCookie(w, c.NewCookie("Session_ID", "", c.Options))
 	} else {
 		if c.ID == "" {
 			c.ID = c.NewID()
+		}
+		if c.Values.Csrf == "" {
+			c.Values.Csrf = c.NewCsrf()
 		}
 		for _, v := range admin_accounts {
 			if c.Values.Username == v {
@@ -92,22 +109,21 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 			fmt.Println(err)
 			return err
 		}
-		http.SetCookie(w, c.NewCookie(c.Name(), c.ID, c.Options))
+		http.SetCookie(w, c.NewCookie("Session_ID", c.ID, c.Options))
 	}
 	return nil
 }
 
-func (r *RedisStore) Get(req *http.Request, name string) (*Cache, error) {
+func (r *RedisStore) Get(req *http.Request) (*Cache, error) {
 	conn := pool.Get()
 	defer conn.Close()
 	c := &Cache{}
-	if cookie, err := req.Cookie(name); err == nil {
+	if cookie, err := req.Cookie("Session_ID"); err == nil {
 		_, err := redis.String(conn.Do("GET", "session_"+cookie.Value))
 		if err != nil {
 			return nil, err
 		}
 		c.ID = cookie.Value
-		c.name = name
 		c.store = r
 	}
 	return c, nil
@@ -121,7 +137,20 @@ func (r *RedisStore) Delete(w http.ResponseWriter, c *Cache) error {
 		return err
 	}
 	c.Options.MaxAge = -1
-	http.SetCookie(w, c.NewCookie(c.Name(), "", c.Options))
+	http.SetCookie(w, c.NewCookie("Session_ID", "", c.Options))
+	return nil
+}
+
+func (e *RedisStore) refreshToken(c *Cache) error {
+	data := c.EncodingToJson()
+	conn := pool.Get()
+	defer conn.Close()
+	if err := conn.Err(); err != nil {
+		return err
+	}
+	if _, err := conn.Do("SETEX", "session_"+c.ID, c.Options.MaxAge, data); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -150,8 +179,10 @@ func (r *RedisStore) save(c *Cache) error {
 	if err := conn.Err(); err != nil {
 		return err
 	}
-	_, err := conn.Do("SETEX", "session_"+c.ID, c.Options.MaxAge, data)
-	return err
+	if _, err := conn.Do("SETEX", "session_"+c.ID, c.Options.MaxAge, data); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *RedisStore) delete(c *Cache) error {
