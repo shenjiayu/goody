@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"crypto/sha1"
-	"encoding/binary"
 	"errors"
-	"fmt"
+	"github.com/shenjiayu/goody/session"
 	"html"
 	"net/url"
 	"reflect"
@@ -65,7 +63,7 @@ func processTag(s reflect.Type, k string, v *string) error {
 			}
 		}
 		if tag := field.Tag.Get("encrypt"); tag == "true" {
-			*v = encrypt(*v)
+			*v = session.Encrypt(*v)
 		}
 		return nil
 	}
@@ -79,20 +77,6 @@ func processReg(pattern, v string) error {
 		return errors.New("error")
 	}
 	return nil
-}
-
-//encrpyt certain field
-func encrypt(data interface{}) string {
-	h := sha1.New()
-	buf := make([]byte, 5)
-	switch data.(type) {
-	case int64:
-		binary.PutVarint(buf, data.(int64))
-	case string:
-		buf = []byte(data.(string))
-	}
-	h.Write(buf)
-	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 //TODO LIST
