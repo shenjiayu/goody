@@ -73,7 +73,7 @@ func (router *router) processRequest(env *session.Env) error {
 			}{
 				"CSRFERROR",
 			}
-			env.OutputJson(returnMsg, env.ResponseWriter)
+			env.ServeJson(returnMsg, env.ResponseWriter)
 		}
 		return err
 	} else {
@@ -83,13 +83,13 @@ func (router *router) processRequest(env *session.Env) error {
 }
 
 func (router *router) processResponse(env *session.Env) error {
-	if env.Tpl != "" {
-		if env.Session.Ctx != nil {
-			env.RenderTemplate(env.ResponseWriter, env.Tpl, env.Session.Ctx)
-			return nil
-		}
-	} else if env.Output != nil {
-		env.OutputJson(env.Output, env.ResponseWriter)
+	switch env.Output_method {
+	case "render":
+		env.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx)
+	case "json":
+		env.ServeJson(env.Output_data, env.ResponseWriter)
+	default:
+		return fmt.Errorf("Only supports ['render', 'json'] methods for responsing")
 	}
 	return nil
 }

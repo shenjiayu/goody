@@ -14,8 +14,8 @@ type Env struct {
 	Request        *http.Request
 	Session        *Session
 	Csrf_required  bool
-	Tpl            string
-	Output         interface{}
+	Output_method  string
+	Output_data    interface{}
 }
 
 func NewEnv(w http.ResponseWriter, r *http.Request) *Env {
@@ -37,10 +37,6 @@ func (e *Env) Set_csrf(required bool) {
 	e.Csrf_required = required
 }
 
-func (e *Env) Set_tpl(tpl string) {
-	e.Tpl = tpl
-}
-
 func (e *Env) RenderTemplate(w http.ResponseWriter, page string, data interface{}) {
 	t := template.New("")
 	t.ParseFiles("view/header.html", "view/footer.html", "view/"+page+".html")
@@ -49,11 +45,14 @@ func (e *Env) RenderTemplate(w http.ResponseWriter, page string, data interface{
 	}
 }
 
-func (e *Env) Set_output(body interface{}) {
-	e.Output = body
+//Output_method is used to determine the way to response to the client, such as render a template or return 'json' message.
+//render represents for rendering the template
+func (e *Env) Set_output_method(method string, data interface{}) {
+	e.Output_method = method
+	e.Output_data = data
 }
 
-func (e *Env) OutputJson(v interface{}, w http.ResponseWriter) {
+func (e *Env) ServeJson(v interface{}, w http.ResponseWriter) {
 	output, _ := json.Marshal(v)
 	fmt.Fprintf(w, "%s", output)
 }
