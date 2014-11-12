@@ -64,8 +64,6 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 					return session, errors.New("invalid csrf token")
 				} else {
 					session.SetCsrf(true)
-					session.Cache.Values.Csrf = session.Cache.NewCsrf()
-					r.refreshToken(session.Cache)
 					session.Ctx.Set("form", req.Form)
 				}
 			}
@@ -138,19 +136,6 @@ func (r *RedisStore) Delete(w http.ResponseWriter, c *Cache) error {
 	}
 	c.Options.MaxAge = -1
 	http.SetCookie(w, c.NewCookie("Session_ID", "", c.Options))
-	return nil
-}
-
-func (e *RedisStore) refreshToken(c *Cache) error {
-	data := c.EncodingToJson()
-	conn := pool.Get()
-	defer conn.Close()
-	if err := conn.Err(); err != nil {
-		return err
-	}
-	if _, err := conn.Do("SETEX", "session_"+c.ID, c.Options.MaxAge, data); err != nil {
-		return err
-	}
 	return nil
 }
 
