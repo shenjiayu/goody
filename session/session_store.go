@@ -50,7 +50,7 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 	if cookie, err := req.Cookie("Session_ID"); err == nil {
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
-			if session.Cache.Values.Username != "" {
+			if session.Cache.Values.Email != "" {
 				session.IsLogin = true
 				if session.Cache.Values.Level == 1 {
 					session.IsSuperUser = true
@@ -97,8 +97,8 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 		if c.Values.Csrf == "" {
 			c.Values.Csrf = c.NewCsrf()
 		}
-		for _, v := range admin_accounts {
-			if c.Values.Username == v {
+		for _, v := range admin_emails {
+			if c.Values.Email == v {
 				c.Values.Level = 1
 				break
 			}

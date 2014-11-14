@@ -38,7 +38,9 @@ func AnonymousUser(store Store) *Cache {
 }
 
 type Values struct {
+	User_id  int    `json:"user_id"`
 	Username string `json:"username"`
+	Email    string `json:"email"`
 	Level    int    `json:"level"`
 	Csrf     string `json:"Csrf"`
 }

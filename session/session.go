@@ -2,7 +2,7 @@ package session
 
 //admin account
 var (
-	admin_accounts = []string{"shenjiayu"}
+	admin_emails = []string{"sjy19930312@gmail.com"}
 )
 
 type Session struct {
