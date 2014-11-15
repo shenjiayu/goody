@@ -10,7 +10,6 @@ type Session struct {
 	Cache       *Cache
 	IsLogin     bool
 	IsSuperUser bool
-	ValidCsrf   bool
 }
 
 func NewSession(store Store) *Session {
@@ -19,10 +18,5 @@ func NewSession(store Store) *Session {
 		Cache:       NewCache(store),
 		IsLogin:     false,
 		IsSuperUser: false,
-		ValidCsrf:   false,
 	}
-}
-
-func (s *Session) SetCsrf(isValid bool) {
-	s.ValidCsrf = isValid
 }

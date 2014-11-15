@@ -67,17 +67,42 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 func (router *router) processRequest(env *session.Env) error {
 	store := session.RedisStore{}
 	if s, err := store.New(env.Request, env.ResponseWriter); err != nil {
-		if s.ValidCsrf == false {
-			returnMsg := struct {
-				Status string `json:"status"`
-			}{
-				"CSRFERROR",
-			}
-			env.ServeJson(returnMsg, env.ResponseWriter)
-		}
 		return err
 	} else {
 		env.Session = s
+		if env.Request.Method != "GET" {
+			env.Request.ParseForm()
+			token := env.Request.FormValue("csrf")
+			if token != env.Session.Cache.Values.Csrf {
+				return fmt.Errorf("invalid csrf token")
+			} else {
+				if env.Session.Cache.Values.Status == 0 && env.Request.URL.Path != "/selfads/newads" {
+					returnMsg := struct {
+						Status string `json:"status"`
+					}{"您的帐号未激活，请在您的注册邮箱激活账号."}
+					env.ServeJson(returnMsg, env.ResponseWriter)
+					return fmt.Errorf("not valid user")
+				} else {
+					env.Session.Ctx.Set("form", env.Request.Form)
+				}
+			}
+		} else {
+			if env.Session.Cache.Values.Status == 0 {
+				env.Session.Ctx.Set("IsActivated", false)
+			} else {
+				env.Session.Ctx.Set("IsActivated", true)
+			}
+			env.Session.Ctx.Set("Csrf", env.Session.Cache.Values.Csrf)
+		}
+		if env.Session.IsLogin {
+			env.Session.Ctx.Set("IsLogin", true)
+			env.Session.Ctx.Set("User_id", env.Session.Cache.Values.User_id)
+			if env.Session.Cache.Values.Username == "" {
+				env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Email)
+			} else {
+				env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Username)
+			}
+		}
 	}
 	return nil
 }

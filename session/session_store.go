@@ -56,17 +56,6 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 					session.IsSuperUser = true
 				}
 			}
-			if req.Method != "GET" {
-				req.ParseForm()
-				token := req.FormValue("csrf")
-				if token != session.Cache.Values.Csrf {
-					session.SetCsrf(false)
-					return session, errors.New("invalid csrf token")
-				} else {
-					session.SetCsrf(true)
-					session.Ctx.Set("form", req.Form)
-				}
-			}
 		} else {
 			session.Cache = AnonymousUser(r)
 			if err := r.Save(req, w, session.Cache); err != nil {
