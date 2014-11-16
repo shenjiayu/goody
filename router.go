@@ -77,7 +77,7 @@ func (router *router) processRequest(env *session.Env) error {
 				return fmt.Errorf("invalid csrf token")
 			} else {
 				path := env.Request.URL.Path
-				if env.Session.Cache.Values.Status == 0 && path != "/selfads/newads" && path != "/user/login" && path != "/user/register" {
+				if env.Session.Cache.Values.Status == 0 && path != "/selfads/newads" && path != "/user/login" && path != "/user/register" && path != "/partner/login" {
 					returnMsg := struct {
 						Status string `json:"status"`
 					}{"您的帐号未激活，请在您的注册邮箱激活账号."}

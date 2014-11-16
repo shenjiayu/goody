@@ -42,7 +42,7 @@ type Values struct {
 	Status   int    `json:"status"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
-	Level    int    `json:"level"` //-1 is anonymous user, 0 is normal user, 1 is admin, 2 is shop owner
+	Level    int    `json:"level"` //-1 is anonymous user, 0 is normal user, 1 is admin, 2 is partner
 	Csrf     string `json:"Csrf"`
 }
 
