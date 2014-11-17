@@ -64,6 +64,7 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 	return nil
 }
 
+// part to be refactored
 func (router *router) processRequest(env *session.Env) error {
 	store := session.RedisStore{}
 	if s, err := store.New(env.Request, env.ResponseWriter); err != nil {
@@ -76,16 +77,7 @@ func (router *router) processRequest(env *session.Env) error {
 			if token != env.Session.Cache.Values.Csrf {
 				return fmt.Errorf("invalid csrf token")
 			} else {
-				path := env.Request.URL.Path
-				if env.Session.Cache.Values.Status == 0 && path != "/selfads/newads" && path != "/user/login" && path != "/user/register" && path != "/partner/login" {
-					returnMsg := struct {
-						Status string `json:"status"`
-					}{"您的帐号未激活，请在您的注册邮箱激活账号."}
-					env.ServeJson(returnMsg, env.ResponseWriter)
-					return fmt.Errorf("not valid user")
-				} else {
-					env.Session.Ctx.Set("form", env.Request.Form)
-				}
+				env.Session.Ctx.Set("form", env.Request.Form)
 			}
 		} else {
 			if env.Session.Cache.Values.Status == 0 {
