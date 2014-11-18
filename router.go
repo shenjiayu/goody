@@ -75,16 +75,11 @@ func (router *router) processRequest(env *session.Env) error {
 			env.Request.ParseForm()
 			token := env.Request.FormValue("csrf")
 			if token != env.Session.Cache.Values.Csrf {
-				return fmt.Errorf("invalid csrf token")
+				return fmt.Errorf("error:csrf")
 			} else {
 				env.Session.Ctx.Set("form", env.Request.Form)
 			}
 		} else {
-			if env.Session.Cache.Values.Status == 0 {
-				env.Session.Ctx.Set("IsActivated", false)
-			} else {
-				env.Session.Ctx.Set("IsActivated", true)
-			}
 			env.Session.Ctx.Set("Csrf", env.Session.Cache.Values.Csrf)
 		}
 		if env.Session.IsLogin {

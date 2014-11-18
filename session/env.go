@@ -13,7 +13,6 @@ type Env struct {
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
 	Session        *Session
-	Csrf_required  bool
 	Output_method  string
 	Output_data    interface{}
 }
@@ -31,10 +30,6 @@ func (e *Env) Redirect(url string) {
 
 func (e *Env) NotFound(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
-}
-
-func (e *Env) Set_csrf(required bool) {
-	e.Csrf_required = required
 }
 
 func (e *Env) RenderTemplate(w http.ResponseWriter, page string, data interface{}) {
