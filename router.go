@@ -101,8 +101,10 @@ func (router *router) processResponse(env *session.Env) error {
 		env.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx)
 	case "json":
 		env.ServeJson(env.Output_data, env.ResponseWriter)
+	case "eventstream":
+		env.ServeEventStream(env.Output_data, env.ResponseWriter)
 	default:
-		return fmt.Errorf("Only supports ['render', 'json'] methods for responsing")
+		return fmt.Errorf("Only supports ['render', 'json', 'eventstream'] methods for responsing")
 	}
 	return nil
 }

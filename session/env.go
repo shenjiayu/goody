@@ -28,6 +28,11 @@ func (e *Env) Redirect(url string) {
 	http.Redirect(e.ResponseWriter, e.Request, url, http.StatusFound)
 }
 
+func (e *Env) SetHeader(w http.ResponseWriter, key string, value string) {
+	header := w.Header()
+	header.Set(key, value)
+}
+
 func (e *Env) NotFound(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
@@ -50,6 +55,19 @@ func (e *Env) Set_output_method(method string, data interface{}) {
 func (e *Env) ServeJson(v interface{}, w http.ResponseWriter) {
 	output, _ := json.Marshal(v)
 	fmt.Fprintf(w, "%s", output)
+}
+
+func (e *Env) ServeEventStream(v interface{}, w http.ResponseWriter) {
+	e.SetHeader(w, "Content-Type", "text/event-stream")
+	e.SetHeader(w, "Cache-Control", "no-cache")
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
+		return
+	}
+	output, _ := json.Marshal(v)
+	fmt.Fprintf(w, "data: %s\n\n", output)
+	flusher.Flush()
 }
 
 func Encrypt(data interface{}) string {
