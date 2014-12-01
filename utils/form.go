@@ -23,7 +23,7 @@ func Form2Struct(form url.Values, s interface{}) error {
 	value := reflect.ValueOf(s).Elem()
 	for k, v := range form {
 		escaped_data := html.EscapeString(v[0])
-		//the field of struct is Capitalized to be read from other packages
+		//the field of struct is Capitalized to be read from outside
 		k = strings.Title(k)
 		//retrieve tag from struct to do validation
 		tmp := reflect.TypeOf(s).Elem()

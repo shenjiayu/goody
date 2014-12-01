@@ -2,6 +2,7 @@ package goody
 
 import (
 	"fmt"
+	"github.com/shenjiayu/goody/middleware"
 	"github.com/shenjiayu/goody/session"
 	"net/http"
 	"reflect"
@@ -66,45 +67,15 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 
 // part to be refactored
 func (router *router) processRequest(env *session.Env) error {
-	store := session.RedisStore{}
-	if s, err := store.New(env.Request, env.ResponseWriter); err != nil {
+	if err := middleware.ProcessRequest(env); err != nil {
 		return err
-	} else {
-		env.Session = s
-		if env.Request.Method != "GET" {
-			env.Request.ParseForm()
-			token := env.Request.FormValue("csrf")
-			if token != env.Session.Cache.Values.Csrf {
-				return fmt.Errorf("error:csrf")
-			} else {
-				env.Session.Ctx.Set("form", env.Request.Form)
-			}
-		} else {
-			env.Session.Ctx.Set("Csrf", env.Session.Cache.Values.Csrf)
-		}
-		if env.Session.IsLogin {
-			env.Session.Ctx.Set("IsLogin", true)
-			env.Session.Ctx.Set("User_id", env.Session.Cache.Values.User_id)
-			if env.Session.Cache.Values.Username == "" {
-				env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Email)
-			} else {
-				env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Username)
-			}
-		}
 	}
 	return nil
 }
 
 func (router *router) processResponse(env *session.Env) error {
-	switch env.Output_method {
-	case "render":
-		env.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx)
-	case "json":
-		env.ServeJson(env.Output_data, env.ResponseWriter)
-	case "eventstream":
-		env.ServeEventStream(env.Output_data, env.ResponseWriter)
-	default:
-		return fmt.Errorf("Only supports ['render', 'json', 'eventstream'] methods for responsing")
+	if err := middleware.ProcessResponse(env); err != nil {
+		return err
 	}
 	return nil
 }
@@ -112,6 +83,7 @@ func (router *router) processResponse(env *session.Env) error {
 func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
 	env := session.NewEnv(w, r)
 	if err := router.processRequest(env); err != nil {
+		fmt.Println(err)
 		return
 	}
 	//fmt.Println(env.Session.ValidToken)
@@ -128,6 +100,7 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	//call corresponding method and pass in the 'in' variable.
 	m.Call(in)
 	if err := router.processResponse(env); err != nil {
+		fmt.Println(err)
 		return
 	}
 }

@@ -37,13 +37,25 @@ func (e *Env) NotFound(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
+//---------part to be removed to template folder
+var funcs_map = template.FuncMap{
+	"backtohtml": backtohtml,
+}
+
+func backtohtml(data string) interface{} {
+	return template.HTML(data)
+}
+
 func (e *Env) RenderTemplate(w http.ResponseWriter, page string, data interface{}) {
 	t := template.New("")
+	t.Funcs(funcs_map)
 	t.ParseFiles("view/header.html", "view/footer.html", "view/"+page+".html")
 	if err := t.ExecuteTemplate(w, page+".html", data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
+
+//
 
 //Output_method is used to determine the way to response to the client, such as render a template or return 'json' message.
 //render represents for rendering the template
