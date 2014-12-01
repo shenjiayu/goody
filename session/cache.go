@@ -12,7 +12,7 @@ import (
 
 type Cache struct {
 	ID      string
-	Values  Values
+	Values  *Values
 	Options *Options
 	store   Store
 }
@@ -22,6 +22,16 @@ func NewCache(store Store) *Cache {
 		Values:  NewValues(),
 		Options: DefaultOptions(),
 		store:   store,
+	}
+}
+
+//init logined users
+func NewUser(user_id int, username string, status int, email string) *Values {
+	return &Values{
+		User_id:  user_id,
+		Username: username,
+		Status:   status,
+		Email:    email,
 	}
 }
 
@@ -46,8 +56,8 @@ type Values struct {
 	Csrf     string `json:"Csrf"`
 }
 
-func NewValues() Values {
-	return Values{}
+func NewValues() *Values {
+	return &Values{}
 }
 
 type Options struct {
