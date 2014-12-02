@@ -64,12 +64,12 @@ func (e *Env) Set_output_method(method string, data interface{}) {
 	e.Output_data = data
 }
 
-func (e *Env) ServeJson(v interface{}, w http.ResponseWriter) {
+func (e *Env) ServeJson(w http.ResponseWriter, v interface{}) {
 	output, _ := json.Marshal(v)
 	fmt.Fprintf(w, "%s", output)
 }
 
-func (e *Env) ServeEventStream(v interface{}, w http.ResponseWriter) {
+func (e *Env) ServeEventStream(w http.ResponseWriter, v interface{}) {
 	e.SetHeader(w, "Content-Type", "text/event-stream")
 	e.SetHeader(w, "Cache-Control", "no-cache")
 	flusher, ok := w.(http.Flusher)

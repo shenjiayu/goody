@@ -41,9 +41,6 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
 			if session.Cache.Values.Email != "" {
 				session.IsLogin = true
-				if session.Cache.Values.Level == 1 {
-					session.IsSuperUser = true
-				}
 			}
 		} else {
 			session.Cache = AnonymousUser(r)

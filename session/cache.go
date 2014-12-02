@@ -17,7 +17,7 @@ type Cache struct {
 	store   Store
 }
 
-func NewCache(store Store) *Cache {
+func newCache(store Store) *Cache {
 	return &Cache{
 		Values:  NewValues(),
 		Options: DefaultOptions(),

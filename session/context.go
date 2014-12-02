@@ -1,37 +1,33 @@
 package session
 
-import (
-	"sync"
-)
-
+//single context
 type Context map[interface{}]interface{}
 
-func newContext() Context {
-	return make(map[interface{}]interface{})
+type entireContext struct {
+	Input  Context
+	Output Context
 }
 
-var lock sync.Mutex
+func newContext() *entireContext {
+	return &entireContext{
+		make(map[interface{}]interface{}),
+		make(map[interface{}]interface{}),
+	}
+}
 
 func (c Context) Set(key, value interface{}) {
-	lock.Lock()
 	c[key] = value
-	lock.Unlock()
 }
 
 func (c Context) Get(key interface{}) interface{} {
-	lock.Lock()
 	if v, ok := c[key]; ok {
-		lock.Unlock()
 		return v
 	}
-	lock.Unlock()
 	return nil
 }
 
 func (c Context) Delete(key interface{}) {
-	lock.Lock()
 	delete(c, key)
-	lock.Unlock()
 }
 
 func (c Context) Purge() {

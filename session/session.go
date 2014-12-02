@@ -6,17 +6,15 @@ var (
 )
 
 type Session struct {
-	Ctx         Context
-	Cache       *Cache
-	IsLogin     bool
-	IsSuperUser bool
+	Ctx     *entireContext
+	Cache   *Cache
+	IsLogin bool
 }
 
 func NewSession(store Store) *Session {
 	return &Session{
-		Ctx:         newContext(),
-		Cache:       NewCache(store),
-		IsLogin:     false,
-		IsSuperUser: false,
+		Ctx:     newContext(),
+		Cache:   newCache(store),
+		IsLogin: false,
 	}
 }
