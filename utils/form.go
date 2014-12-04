@@ -59,7 +59,7 @@ func processTag(s reflect.Type, k string, v *string) error {
 		}
 		if tag := field.Tag.Get("reg"); tag != "" {
 			if err := processReg(tag, *v); err != nil {
-				return errors.New(k + "不符合标准")
+				return errors.New("格式不正确.")
 			}
 		}
 		if tag := field.Tag.Get("encrypt"); tag == "true" {
