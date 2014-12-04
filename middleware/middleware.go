@@ -22,16 +22,15 @@ func ProcessRequest(env *session.Env) error {
 		} else {
 			env.Session.Ctx.Output.Set("Csrf", env.Session.Cache.Values.Csrf)
 		}
-		/*
-			if env.Session.IsLogin {
-				env.Session.Ctx.Set("IsLogin", true)
-				env.Session.Ctx.Set("User_id", env.Session.Cache.Values.User_id)
-				if env.Session.Cache.Values.Username == "" {
-					env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Email)
-				} else {
-					env.Session.Ctx.Set("Display_info", env.Session.Cache.Values.Username)
-				}
-			}*/
+		if env.Session.IsLogin {
+			env.Session.Ctx.Output.Set("IsLogin", true)
+			env.Session.Ctx.Output.Set("User_id", env.Session.Cache.Values.User_id)
+			if env.Session.Cache.Values.Username == "" {
+				env.Session.Ctx.Output.Set("Display_info", env.Session.Cache.Values.Email)
+			} else {
+				env.Session.Ctx.Output.Set("Display_info", env.Session.Cache.Values.Username)
+			}
+		}
 	}
 	return nil
 }

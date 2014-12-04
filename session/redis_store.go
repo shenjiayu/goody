@@ -39,7 +39,7 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 	if cookie, err := req.Cookie("Session_ID"); err == nil {
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
-			if session.Cache.Values.Email != "" {
+			if session.Cache.Values.Level != -1 {
 				session.IsLogin = true
 			}
 		} else {
