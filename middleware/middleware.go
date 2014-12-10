@@ -3,6 +3,7 @@ package middleware
 import (
 	"fmt"
 	"github.com/shenjiayu/goody/session"
+	"github.com/shenjiayu/goody/template"
 )
 
 func ProcessRequest(env *session.Env) error {
@@ -24,12 +25,7 @@ func ProcessRequest(env *session.Env) error {
 		}
 		if env.Session.IsLogin {
 			env.Session.Ctx.Output.Set("IsLogin", true)
-			env.Session.Ctx.Output.Set("User_id", env.Session.Cache.Values.User_id)
-			if env.Session.Cache.Values.Username == "" {
-				env.Session.Ctx.Output.Set("Display_info", env.Session.Cache.Values.Email)
-			} else {
-				env.Session.Ctx.Output.Set("Display_info", env.Session.Cache.Values.Username)
-			}
+			env.Session.Ctx.Output.Set("Cache", env.Session.Cache.Values)
 		}
 	}
 	return nil
@@ -38,7 +34,7 @@ func ProcessRequest(env *session.Env) error {
 func ProcessResponse(env *session.Env) error {
 	switch env.Output_method {
 	case "render":
-		env.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx.Output)
+		template.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx.Output)
 	case "json":
 		env.ServeJson(env.ResponseWriter, env.Output_data)
 	case "eventstream":
