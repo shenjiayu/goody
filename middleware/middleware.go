@@ -39,8 +39,6 @@ func ProcessResponse(env *session.Env) error {
 		env.ServeJson(env.ResponseWriter, env.Output_data)
 	case "eventstream":
 		env.ServeEventStream(env.ResponseWriter, env.Output_data)
-	default:
-		return fmt.Errorf("Only supports ['render', 'json', 'eventstream'] methods for responsing")
 	}
 	return nil
 }
