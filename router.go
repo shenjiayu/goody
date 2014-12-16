@@ -89,6 +89,10 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	//fmt.Println(env.Session.ValidToken)
 	envValue := reflect.ValueOf(env)
 	m, _ := l.methods[r.Method]
+	if m.Kind() == reflect.Invalid {
+		env.NotFound(w, r)
+		return
+	}
 	//init the arguments
 	in := make([]reflect.Value, m.Type().NumIn())
 	//the first argument is '*session.Env'.
