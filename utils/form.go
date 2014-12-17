@@ -22,12 +22,12 @@ func Form2Struct(form url.Values, s interface{}) error {
 	}
 	value := reflect.ValueOf(s).Elem()
 	for k, v := range form {
-		escaped_data := html.EscapeString(v[0])
+		data := v[0]
 		//the field of struct is Capitalized to be read from outside
 		k = strings.Title(k)
 		//retrieve tag from struct to do validation
 		tmp := reflect.TypeOf(s).Elem()
-		if err := processTag(tmp, k, &escaped_data); err != nil {
+		if err := processTag(tmp, k, &data); err != nil {
 			return err
 		}
 		field := value.FieldByName(k)
@@ -35,12 +35,13 @@ func Form2Struct(form url.Values, s interface{}) error {
 		if field.Kind() != reflect.Invalid {
 			//A Kind represents the specific kind of type that a Type represents. The zero Kind is not a valid kind.
 			field_kind := field.Kind()
+			data = html.EscapeString(data)
 			switch field_kind {
 			//here normally, we just had two types of fields, which are 'string', 'int64'.
 			case reflect.String:
-				field.SetString(escaped_data)
+				field.SetString(data)
 			case reflect.Int:
-				tmp, _ := strconv.Atoi(escaped_data)
+				tmp, _ := strconv.Atoi(data)
 				field.SetInt(int64(tmp))
 			default:
 				return errors.New("invalid field")
