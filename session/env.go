@@ -48,19 +48,6 @@ func (e *Env) ServeJson(w http.ResponseWriter, v interface{}) {
 	fmt.Fprintf(w, "%s", output)
 }
 
-func (e *Env) ServeEventStream(w http.ResponseWriter, v interface{}) {
-	e.SetHeader(w, "Content-Type", "text/event-stream")
-	e.SetHeader(w, "Cache-Control", "no-cache")
-	flusher, ok := w.(http.Flusher)
-	if !ok {
-		http.Error(w, "Streaming unsupported!", http.StatusInternalServerError)
-		return
-	}
-	output, _ := json.Marshal(v)
-	fmt.Fprintf(w, "data: %s\n\n", output)
-	flusher.Flush()
-}
-
 func Encrypt(data interface{}) string {
 	h := sha1.New()
 	buf := make([]byte, 5)

@@ -36,8 +36,6 @@ func ProcessResponse(env *session.Env) error {
 		template.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx.Output)
 	case "json":
 		env.ServeJson(env.ResponseWriter, env.Output_data)
-	case "eventstream":
-		env.ServeEventStream(env.ResponseWriter, env.Output_data)
 	}
 	return nil
 }

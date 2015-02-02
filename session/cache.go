@@ -73,7 +73,7 @@ type Options struct {
 func DefaultOptions() *Options {
 	return &Options{
 		Path:     "/",
-		MaxAge:   720000,
+		MaxAge:   2592000,
 		HttpOnly: true,
 	}
 }
