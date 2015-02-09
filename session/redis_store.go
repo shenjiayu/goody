@@ -70,7 +70,7 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 			c.ID = c.NewID()
 		}
 		if c.Values.Csrf == "" {
-			c.Values.Csrf = c.NewCsrf()
+			c.Values.Csrf = NewCsrf()
 		}
 		for _, v := range admin_emails {
 			if c.Values.Email == v {
