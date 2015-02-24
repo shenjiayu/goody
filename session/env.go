@@ -38,7 +38,7 @@ func (e *Env) NotFound(w http.ResponseWriter, r *http.Request) {
 
 //Output_method is used to determine the way to response to the client, such as render a template or return 'json' message.
 //render represents for rendering the template
-func (e *Env) Set_output_method(method string, data interface{}) {
+func (e *Env) Respond(method string, data interface{}) {
 	e.Output_method = method
 	e.Output_data = data
 }

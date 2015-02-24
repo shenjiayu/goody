@@ -16,7 +16,7 @@ func ProcessRequest(env *session.Env) error {
 			env.Request.ParseForm()
 			token := env.Request.FormValue("csrf")
 			if token != env.Session.Cache.Values.Csrf {
-				return fmt.Errorf("error:csrf")
+				return fmt.Errorf("error:csrf is invalid")
 			}
 			env.Session.Ctx.Input.Set("form", env.Request.Form)
 		} else {

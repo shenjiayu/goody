@@ -72,12 +72,6 @@ func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) er
 		if c.Values.Csrf == "" {
 			c.Values.Csrf = NewCsrf()
 		}
-		for _, v := range admin_emails {
-			if c.Values.Email == v {
-				c.Values.Level = 1
-				break
-			}
-		}
 		if err := r.save(c); err != nil {
 			fmt.Println(err)
 			return err
