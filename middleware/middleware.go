@@ -3,7 +3,7 @@ package middleware
 import (
 	"fmt"
 	"github.com/shenjiayu/goody/session"
-	"github.com/shenjiayu/goody/template"
+	//"github.com/shenjiayu/goody/template"
 )
 
 func ProcessRequest(env *session.Env) error {
@@ -30,6 +30,8 @@ func ProcessRequest(env *session.Env) error {
 	return nil
 }
 
+/*
+
 func ProcessResponse(env *session.Env) error {
 	switch env.Output_method {
 	case "render":
@@ -39,3 +41,4 @@ func ProcessResponse(env *session.Env) error {
 	}
 	return nil
 }
+*/

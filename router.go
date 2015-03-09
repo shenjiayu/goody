@@ -73,12 +73,14 @@ func (router *router) processRequest(env *session.Env) error {
 	return nil
 }
 
+/*
 func (router *router) processResponse(env *session.Env) error {
 	if err := middleware.ProcessResponse(env); err != nil {
 		return err
 	}
 	return nil
 }
+*/
 
 func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
 	env := session.NewEnv(w, r)
@@ -103,10 +105,12 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	}
 	//call corresponding method and pass in the 'in' variable.
 	m.Call(in)
-	if err := router.processResponse(env); err != nil {
-		fmt.Println(err)
-		return
-	}
+	/*
+		if err := router.processResponse(env); err != nil {
+			fmt.Println(err)
+			return
+		}
+	*/
 }
 
 func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
