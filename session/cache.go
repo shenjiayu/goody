@@ -26,17 +26,8 @@ func newCache(store Store) *Cache {
 }
 
 //init logined users
-func NewUser(user_id int, student_id int, username string, name string, grade int, year int, class int, status int) *Values {
-	return &Values{
-		User_id:    user_id,
-		Student_id: student_id,
-		Username:   username,
-		Name:       name,
-		Grade:      grade,
-		Year:       year,
-		Class:      class,
-		Status:     status,
-	}
+func NewUser(user_id int, username, email, avatar string) *Values {
+	return &Values{User_id: user_id, Username: username, Email: email, Avatar: avatar}
 }
 
 //init anonymous users
@@ -48,16 +39,12 @@ func AnonymousUser(store Store) *Cache {
 }
 
 type Values struct {
-	User_id    int    `json:"user_id"`
-	Student_id int    `json:"student_id"`
-	Username   string `json:"username"`
-	Name       string `json:"name"`
-	Grade      int    `json:"grade"`
-	Year       int    `json:"year"`
-	Class      int    `json:"class"`
-	Level      int    `json:"level"` //-1 is anonymous user, 0 is normal user, 1 is admin
-	Status     int    `json:"status"`
-	Csrf       string `json:"Csrf"`
+	User_id  int    `json:"user_id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Avatar   string `json:"avatar"`
+	Level    int    `json:"level"`
+	Csrf     string `json:"csrf"`
 }
 
 func NewValues() *Values {
