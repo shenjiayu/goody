@@ -26,8 +26,8 @@ func newCache(store Store) *Cache {
 }
 
 //init logined users
-func NewUser(user_id int64, username, email, avatar string) *Values {
-	return &Values{User_id: user_id, Username: username, Email: email, Avatar: avatar}
+func NewUser(user_id, username, email string, status int) *Values {
+	return &Values{User_id: user_id, Username: username, Email: email, Status: status}
 }
 
 //init anonymous users
@@ -39,11 +39,11 @@ func AnonymousUser(store Store) *Cache {
 }
 
 type Values struct {
-	User_id  int64  `json:"user_id"`
+	User_id  string `json:"user_id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
-	Avatar   string `json:"avatar"`
 	Level    int    `json:"level"`
+	Status   int    `json:"status"`
 	Csrf     string `json:"csrf"`
 }
 

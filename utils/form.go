@@ -61,12 +61,9 @@ func Form2Struct(form url.Values, s interface{}) error {
 //encryption over certain field like 'token', 'password'
 func processTag(s reflect.Type, k string, v *string) error {
 	if field, ok := s.FieldByName(k); ok {
-		if tag := field.Tag.Get("required"); tag == "true" && len(*v) == 0 {
-			return errors.New(k + "不能为空")
-		}
 		if tag := field.Tag.Get("reg"); tag != "" {
 			if err := processReg(tag, *v); err != nil {
-				return errors.New("格式不正确.")
+				return errors.New("format is wrong.")
 			}
 		}
 		if tag := field.Tag.Get("encrypt"); tag == "true" {
