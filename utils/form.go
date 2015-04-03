@@ -46,6 +46,9 @@ func Form2Struct(form url.Values, s interface{}) error {
 			case reflect.Int64:
 				tmp, _ := strconv.ParseInt(data, 10, 64)
 				field.SetInt(tmp)
+			case reflect.Float32:
+				tmp, _ := strconv.ParseFloat(data, 32)
+				field.SetFloat(tmp)
 			case reflect.Float64:
 				tmp, _ := strconv.ParseFloat(data, 64)
 				field.SetFloat(tmp)
