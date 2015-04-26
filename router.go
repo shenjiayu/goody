@@ -92,7 +92,6 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	envValue := reflect.ValueOf(env)
 	m, _ := l.methods[r.Method]
 	if m.Kind() == reflect.Invalid {
-		env.NotFound(w, r)
 		return
 	}
 	//init the arguments
@@ -105,12 +104,6 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 	}
 	//call corresponding method and pass in the 'in' variable.
 	m.Call(in)
-	/*
-		if err := router.processResponse(env); err != nil {
-			fmt.Println(err)
-			return
-		}
-	*/
 }
 
 func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {

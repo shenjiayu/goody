@@ -8,10 +8,15 @@ import (
 var funcs_map = template.FuncMap{
 	"backtohtml": backtohtml,
 	"minus":      minus,
+	"add":        add,
 }
 
 func backtohtml(data string) interface{} {
 	return template.HTML(data)
+}
+
+func add(a, b int) int {
+	return a + b
 }
 
 func minus(a, b int) int {
