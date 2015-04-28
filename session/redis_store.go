@@ -44,14 +44,14 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 			}
 		} else {
 			session.Cache = AnonymousUser(r)
-			if err := r.Save(req, w, session.Cache); err != nil {
+			if err := r.Save(w, session.Cache); err != nil {
 				return nil, err
 			}
 			http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 		}
 	} else if err == http.ErrNoCookie {
 		session.Cache = AnonymousUser(r)
-		if err := r.Save(req, w, session.Cache); err != nil {
+		if err := r.Save(w, session.Cache); err != nil {
 			return nil, err
 		}
 		http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
@@ -59,7 +59,7 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 	return session, nil
 }
 
-func (r *RedisStore) Save(req *http.Request, w http.ResponseWriter, c *Cache) error {
+func (r *RedisStore) Save(w http.ResponseWriter, c *Cache) error {
 	if c.Options.MaxAge < 0 {
 		if err := r.delete(c); err != nil {
 			return err
