@@ -1,8 +1,10 @@
 package utils
 
 import (
+	"crypto/sha1"
+	"encoding/binary"
 	"errors"
-	"github.com/shenjiayu/goody/session"
+	"fmt"
 	"html"
 	"net/url"
 	"reflect"
@@ -11,8 +13,12 @@ import (
 	"strings"
 )
 
+var (
+	InValidField = errors.New("Invalid field.")
+)
+
 //it is an encapsulation on r.ParseForm() method
-//to auto-detect the struct that should be initiated to.
+//to auto-detect the struct that should be parsed to.
 func Form2Struct(form url.Values, s interface{}) error {
 	if form == nil {
 		return errors.New("form should not be nill")
@@ -55,6 +61,8 @@ func Form2Struct(form url.Values, s interface{}) error {
 			default:
 				return errors.New("invalid field")
 			}
+		} else {
+			return InValidField
 		}
 	}
 	return nil
@@ -70,7 +78,7 @@ func processTag(s reflect.Type, k string, v *string) error {
 			}
 		}
 		if tag := field.Tag.Get("encrypt"); tag == "true" {
-			*v = session.Encrypt(*v)
+			*v = encrypt(*v)
 		}
 		return nil
 	}
@@ -86,5 +94,18 @@ func processReg(pattern, v string) error {
 	return nil
 }
 
+func encrypt(data interface{}) string {
+	h := sha1.New()
+	buf := make([]byte, 5)
+	switch data.(type) {
+	case int64:
+		binary.PutVarint(buf, data.(int64))
+	case string:
+		buf = []byte(data.(string))
+	}
+	h.Write(buf)
+	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
 //TODO LIST
-//This utils is in progress
+//This utils is under developing

@@ -26,7 +26,7 @@ func newCache(store Store) *Cache {
 }
 
 //init logined users
-func NewUser(user_id int, username, email string, status int, tags []string) *Values {
+func NormalUser(user_id int, username, email string, status int, tags []string) *Values {
 	return &Values{User_id: user_id, Username: username, Email: email, Status: status, Tags: tags}
 }
 
