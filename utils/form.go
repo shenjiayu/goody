@@ -61,8 +61,6 @@ func Form2Struct(form url.Values, s interface{}) error {
 			default:
 				return errors.New("invalid field")
 			}
-		} else {
-			return InValidField
 		}
 	}
 	return nil
