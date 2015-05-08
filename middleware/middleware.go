@@ -3,42 +3,28 @@ package middleware
 import (
 	"fmt"
 	"github.com/shenjiayu/goody/session"
-	//"github.com/shenjiayu/goody/template"
+	"net/http"
 )
 
-func ProcessRequest(env *session.Env) error {
+func ProcessRequest(req *http.Request, w http.ResponseWriter) (*session.Session, error) {
 	store := session.RedisStore{}
-	if s, err := store.New(env.Request, env.ResponseWriter); err != nil {
-		return err
+	s, err := store.New(req, w)
+	if err != nil {
+		return nil, err
+	}
+	if s.Request.Method != "GET" {
+		s.Request.ParseForm()
+		csrf := s.Request.FormValue("csrf")
+		if csrf != s.Cache.Values.Csrf {
+			return nil, fmt.Errorf("error:csrf is invalid")
+		}
+		s.Ctx.Input.Set("form", s.Request.Form)
 	} else {
-		env.Session = s
-		if env.Request.Method != "GET" {
-			env.Request.ParseForm()
-			token := env.Request.FormValue("csrf")
-			if token != env.Session.Cache.Values.Csrf {
-				return fmt.Errorf("error:csrf is invalid")
-			}
-			env.Session.Ctx.Input.Set("form", env.Request.Form)
-		} else {
-			env.Session.Ctx.Output.Set("Csrf", env.Session.Cache.Values.Csrf)
-		}
-		if env.Session.IsLogin {
-			env.Session.Ctx.Output.Set("IsLogin", true)
-			env.Session.Ctx.Output.Set("Cache", env.Session.Cache.Values)
-		}
+		s.Ctx.Output.Set("Csrf", s.Cache.Values.Csrf)
 	}
-	return nil
-}
-
-/*
-
-func ProcessResponse(env *session.Env) error {
-	switch env.Output_method {
-	case "render":
-		template.RenderTemplate(env.ResponseWriter, env.Output_data.(string), env.Session.Ctx.Output)
-	case "json":
-		env.ServeJson(env.ResponseWriter, env.Output_data)
+	if s.IsLogin {
+		s.Ctx.Output.Set("IsLogin", true)
+		s.Ctx.Output.Set("Cache", s.Cache.Values)
 	}
-	return nil
+	return s, nil
 }
-*/

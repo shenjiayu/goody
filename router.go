@@ -3,7 +3,6 @@ package goody
 import (
 	"fmt"
 	"github.com/shenjiayu/goody/middleware"
-	"github.com/shenjiayu/goody/session"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -65,39 +64,21 @@ func (router *router) Handle(pattern string, handler interface{}) error {
 	return nil
 }
 
-// part to be refactored
-func (router *router) processRequest(env *session.Env) error {
-	if err := middleware.ProcessRequest(env); err != nil {
-		return err
-	}
-	return nil
-}
-
-/*
-func (router *router) processResponse(env *session.Env) error {
-	if err := middleware.ProcessResponse(env); err != nil {
-		return err
-	}
-	return nil
-}
-*/
-
-func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *location, args ...string) {
-	env := session.NewEnv(w, r)
-	if err := router.processRequest(env); err != nil {
-		fmt.Println(err)
+func (router *router) CallMethod(req *http.Request, w http.ResponseWriter, l *location, args ...string) {
+	s, err := middleware.ProcessRequest(req, w)
+	if err != nil {
+		fmt.Errorf(err.Error())
 		return
 	}
-	//fmt.Println(env.Session.ValidToken)
-	envValue := reflect.ValueOf(env)
-	m, _ := l.methods[r.Method]
+	sessionValue := reflect.ValueOf(s)
+	m, _ := l.methods[req.Method]
 	if m.Kind() == reflect.Invalid {
 		return
 	}
 	//init the arguments
 	in := make([]reflect.Value, m.Type().NumIn())
 	//the first argument is '*session.Env'.
-	in[0] = envValue
+	in[0] = sessionValue
 	//iterate over the passed arguments 'args' to in variables.
 	for i, v := range args {
 		in[i+1] = reflect.ValueOf(v)
@@ -109,14 +90,14 @@ func (router *router) CallMethod(w http.ResponseWriter, r *http.Request, l *loca
 func (router *router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	if l, ok := router.literalLocs[path]; ok {
-		router.CallMethod(w, r, l)
+		router.CallMethod(r, w, l)
 	} else {
 		//iterate over all regular expression locations
 		for _, l := range router.regexpLocs {
 			//args will be nil, if the regular expression cannot find submatch of this path
 			arg := l.regexpPattern.FindStringSubmatch(path)
 			if arg != nil {
-				router.CallMethod(w, r, l, arg[1])
+				router.CallMethod(r, w, l, arg[1])
 				return
 			}
 		}

@@ -19,13 +19,13 @@ var supportMethods = []string{"Get", "Post", "Put", "Head", "Delete"}
 func (l *location) checkMethod(handler interface{}, m reflect.Type, name string) error {
 	nIn := m.NumIn()
 	if nIn == 0 || m.In(0).Kind() != reflect.Ptr {
-		return fmt.Errorf("%T:function %s first input argument must *session.Env", handler, name)
+		return fmt.Errorf("%T:function [%s] first input argument must be *session.Session", handler, name)
 	}
-	if m.In(0).String() != "*session.Env" {
-		return fmt.Errorf("%T:function %s first input argument must *session.Env", handler, name)
+	if m.In(0).String() != "*session.Session" {
+		return fmt.Errorf("%T:function [%s] first input argument must be *session.Session", handler, name)
 	}
 	if name == "Prepare" && nIn > 1 {
-		return fmt.Errorf("%T:function %s must have one input argument", handler, name)
+		return fmt.Errorf("%T:function [%s] must have one input argument", handler, name)
 	}
 	for i := 1; i < nIn; i++ {
 		//right arguments must be string

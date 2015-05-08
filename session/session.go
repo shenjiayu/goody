@@ -1,15 +1,23 @@
 package session
 
+import (
+	"net/http"
+)
+
 type Session struct {
-	Ctx     *entireContext
-	Cache   *Cache
-	IsLogin bool
+	ResponseWriter http.ResponseWriter
+	Request        *http.Request
+	Ctx            *entireContext
+	Cache          *Cache
+	IsLogin        bool
 }
 
-func NewSession(store Store) *Session {
+func NewSession(store Store, w http.ResponseWriter, r *http.Request) *Session {
 	return &Session{
-		Ctx:     newContext(),
-		Cache:   newCache(store),
-		IsLogin: false,
+		ResponseWriter: w,
+		Request:        r,
+		Ctx:            newContext(),
+		Cache:          newCache(store),
+		IsLogin:        false,
 	}
 }

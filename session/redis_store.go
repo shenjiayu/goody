@@ -35,7 +35,7 @@ var (
 )
 
 func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, error) {
-	session := NewSession(r)
+	session := NewSession(r, w, req)
 	if cookie, err := req.Cookie("Session_ID"); err == nil {
 		session.Cache.ID = cookie.Value
 		if ok, err2 := r.load(session.Cache); err2 == nil && ok {
@@ -43,14 +43,14 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 				session.IsLogin = true
 			}
 		} else {
-			session.Cache = AnonymousUser(r)
+			session.Cache = anonymousUser(r)
 			if err := r.Save(w, session.Cache); err != nil {
 				return nil, err
 			}
 			http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 		}
 	} else if err == http.ErrNoCookie {
-		session.Cache = AnonymousUser(r)
+		session.Cache = anonymousUser(r)
 		if err := r.Save(w, session.Cache); err != nil {
 			return nil, err
 		}
@@ -67,10 +67,10 @@ func (r *RedisStore) Save(w http.ResponseWriter, c *Cache) error {
 		http.SetCookie(w, c.NewCookie("Session_ID", "", c.Options))
 	} else {
 		if c.ID == "" {
-			c.ID = c.NewID()
+			c.ID = c.generateID()
 		}
 		if c.Values.Csrf == "" {
-			c.Values.Csrf = NewCsrf()
+			c.Values.Csrf = newCsrf()
 		}
 		if err := r.save(c); err != nil {
 			fmt.Println(err)

@@ -13,10 +13,6 @@ import (
 	"strings"
 )
 
-var (
-	InValidField = errors.New("Invalid field.")
-)
-
 //it is an encapsulation on r.ParseForm() method
 //to auto-detect the struct that should be parsed to.
 func Form2Struct(form url.Values, s interface{}) error {
@@ -43,7 +39,6 @@ func Form2Struct(form url.Values, s interface{}) error {
 			field_kind := field.Kind()
 			data = html.EscapeString(data)
 			switch field_kind {
-			//here normally, we just had two types of fields, which are 'string', 'int64'.
 			case reflect.String:
 				field.SetString(data)
 			case reflect.Int:
@@ -59,7 +54,7 @@ func Form2Struct(form url.Values, s interface{}) error {
 				tmp, _ := strconv.ParseFloat(data, 64)
 				field.SetFloat(tmp)
 			default:
-				return errors.New("invalid field")
+				return errors.New("invalid type.")
 			}
 		}
 	}

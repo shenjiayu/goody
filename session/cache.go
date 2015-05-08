@@ -19,7 +19,7 @@ type Cache struct {
 
 func newCache(store Store) *Cache {
 	return &Cache{
-		Values:  NewValues(),
+		Values:  newValues(),
 		Options: DefaultOptions(),
 		store:   store,
 	}
@@ -31,9 +31,9 @@ func NormalUser(user_id int, username, email string, status int, tags []string) 
 }
 
 //init anonymous users
-func AnonymousUser(store Store) *Cache {
+func anonymousUser(store Store) *Cache {
 	c := newCache(store)
-	c.ID = c.NewID()
+	c.ID = c.generateID()
 	c.Values.Level = -1
 	return c
 }
@@ -48,8 +48,8 @@ type Values struct {
 	Csrf     string   `json:"csrf"`
 }
 
-func NewValues() *Values {
-	return &Values{Csrf: NewCsrf()}
+func newValues() *Values {
+	return &Values{Csrf: newCsrf()}
 }
 
 type Options struct {
@@ -90,10 +90,6 @@ func (c *Cache) Store() Store {
 	return c.store
 }
 
-func (c *Cache) NewID() string {
-	return generateID()
-}
-
 func (c *Cache) EncodingToJson() string {
 	data, _ := json.Marshal(c.Values)
 	return fmt.Sprintf("%s", data)
@@ -103,7 +99,7 @@ func (c *Cache) DecodingFromJson(data string) {
 	json.Unmarshal([]byte(data), &c.Values)
 }
 
-func generateID() string {
+func (c *Cache) generateID() string {
 	buf := make([]byte, 20)
 	if n, err := rand.Read(buf); err == nil {
 		return base64.URLEncoding.EncodeToString(buf[:n])
@@ -111,7 +107,7 @@ func generateID() string {
 	return ""
 }
 
-func NewCsrf() string {
+func newCsrf() string {
 	h := sha1.New()
 	buf := make([]byte, 0)
 	buf, _ = time.Now().MarshalBinary()
