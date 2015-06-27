@@ -2,8 +2,9 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/shenjiayu/goody/session"
 	"net/http"
+
+	"github.com/shenjiayu/goody/session"
 )
 
 func ProcessRequest(req *http.Request, w http.ResponseWriter) (*session.Session, error) {
@@ -18,7 +19,6 @@ func ProcessRequest(req *http.Request, w http.ResponseWriter) (*session.Session,
 		if csrf != s.Cache.Values.Csrf {
 			return nil, fmt.Errorf("error:csrf is invalid")
 		}
-		s.Ctx.Input.Set("form", s.Request.Form)
 	} else {
 		s.Ctx.Output.Set("Csrf", s.Cache.Values.Csrf)
 	}

@@ -3,9 +3,10 @@ package goody
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/shenjiayu/goody/session"
 	"github.com/shenjiayu/goody/template"
-	"net/http"
 )
 
 type Controller struct {
@@ -34,5 +35,7 @@ func (this *Controller) Respond(w http.ResponseWriter, method string, data inter
 		template.RenderTemplate(w, data.(string), ctx)
 	case "json":
 		this.serveJson(w, data)
+	default:
+		fmt.Errorf("No such methods, only support [render, json]")
 	}
 }
