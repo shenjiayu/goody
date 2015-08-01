@@ -70,20 +70,20 @@ func (router *router) CallMethod(req *http.Request, w http.ResponseWriter, l *lo
 		fmt.Errorf(err.Error())
 		return
 	}
-	sessionValue := reflect.ValueOf(s)
+	session_value := reflect.ValueOf(s)
 	m, _ := l.methods[req.Method]
 	if m.Kind() == reflect.Invalid {
 		return
 	}
 	//init the arguments
 	in := make([]reflect.Value, m.Type().NumIn())
-	//the first argument is '*session.Env'.
-	in[0] = sessionValue
-	//iterate over the passed arguments 'args' to in variables.
-	for i, v := range args {
-		in[i+1] = reflect.ValueOf(v)
+	//first element is *session.Session
+	in[0] = session_value
+	for index, value := range args {
+		in[index+1] = reflect.ValueOf(value)
 	}
 	//call corresponding method and pass in the 'in' variable.
+
 	m.Call(in)
 }
 

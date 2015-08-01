@@ -3,10 +3,9 @@ package goody
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"github.com/shenjiayu/goody/session"
 	"github.com/shenjiayu/goody/template"
+	"net/http"
 )
 
 type Controller struct {

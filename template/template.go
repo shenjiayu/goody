@@ -7,20 +7,15 @@ import (
 
 var funcs_map = template.FuncMap{
 	"backtohtml": backtohtml,
-	"minus":      minus,
-	"add":        add,
+	"multiply":   multiply,
 }
 
 func backtohtml(data string) interface{} {
 	return template.HTML(data)
 }
 
-func add(a, b int) int {
-	return a + b
-}
-
-func minus(a, b int) int {
-	return a - b
+func multiply(a, b float32) float32 {
+	return a * b
 }
 
 func RenderTemplate(w http.ResponseWriter, page string, data interface{}) {
