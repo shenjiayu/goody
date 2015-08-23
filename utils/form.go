@@ -1,11 +1,12 @@
 package utils
 
 import (
+	"crypto/rand"
 	"crypto/sha1"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"html"
+	"io"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -27,14 +28,14 @@ func Form2Struct(form url.Values, s interface{}) error {
 		data := v[0]
 		//the field of struct is Capitalized to be read from outside
 		k = strings.Title(k)
-		//retrieve tag from struct to do validation
-		tmp := reflect.TypeOf(s).Elem()
-		if err := processTag(tmp, k, &data); err != nil {
-			return err
-		}
 		field := value.FieldByName(k)
 		//validate if this field belongs to this struct
 		if field.Kind() != reflect.Invalid {
+			//retrieve tag from struct to do validation
+			elem := reflect.TypeOf(s).Elem()
+			if err := processTag(elem, k, &data); err != nil {
+				return err
+			}
 			//A Kind represents the specific kind of type that a Type represents. The zero Kind is not a valid kind.
 			field_kind := field.Kind()
 			data = html.EscapeString(data)
@@ -62,7 +63,7 @@ func Form2Struct(form url.Values, s interface{}) error {
 }
 
 //TODO list
-//encryption over certain field like 'token', 'password'
+//encryption on certain field like 'token', 'password'
 func processTag(s reflect.Type, k string, v *string) error {
 	if field, ok := s.FieldByName(k); ok {
 		if tag := field.Tag.Get("reg"); tag != "" {
@@ -73,7 +74,6 @@ func processTag(s reflect.Type, k string, v *string) error {
 		if tag := field.Tag.Get("encrypt"); tag == "true" {
 			*v = encrypt(*v)
 		}
-		return nil
 	}
 	return nil
 }
@@ -87,18 +87,23 @@ func processReg(pattern, v string) error {
 	return nil
 }
 
-func encrypt(data interface{}) string {
-	h := sha1.New()
-	buf := make([]byte, 5)
-	switch data.(type) {
-	case int64:
-		binary.PutVarint(buf, data.(int64))
-	case string:
-		buf = []byte(data.(string))
+func generateSalt(secret []byte) []byte {
+	buf := make([]byte, 16, 16+sha1.Size)
+	_, err := io.ReadFull(rand.Reader, buf)
+	if err != nil {
+		fmt.Printf("Random Read failed: %v", err)
+		return nil
 	}
-	h.Write(buf)
-	return fmt.Sprintf("%x", h.Sum(nil))
+	hash := sha1.New()
+	hash.Write(buf)
+	hash.Write(secret)
+	return hash.Sum(buf)
 }
 
-//TODO LIST
-//This utils is under developing
+func encrypt(password string) string {
+	salt := generateSalt([]byte(password))
+	combination := string(salt) + password
+	passwordHash := sha1.New()
+	io.WriteString(passwordHash, combination)
+	return fmt.Sprintf("%x", passwordHash.Sum(nil))
+}
