@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"crypto/rand"
 	"crypto/sha1"
 	"errors"
 	"fmt"
@@ -87,23 +86,17 @@ func processReg(pattern, v string) error {
 	return nil
 }
 
-func generateSalt(secret []byte) []byte {
-	buf := make([]byte, 16, 16+sha1.Size)
-	_, err := io.ReadFull(rand.Reader, buf)
-	if err != nil {
-		fmt.Printf("Random Read failed: %v", err)
-		return nil
-	}
-	hash := sha1.New()
-	hash.Write(buf)
-	hash.Write(secret)
-	return hash.Sum(buf)
-}
+const (
+	salt1 = "~!@#"
+	salt2 = "$%^&"
+)
 
 func encrypt(password string) string {
-	salt := generateSalt([]byte(password))
-	combination := string(salt) + password
-	passwordHash := sha1.New()
-	io.WriteString(passwordHash, combination)
-	return fmt.Sprintf("%x", passwordHash.Sum(nil))
+	hash := sha1.New()
+	io.WriteString(hash, password)
+	passwordHash := fmt.Sprintf("%x", hash.Sum(nil))
+	io.WriteString(hash, salt1)
+	io.WriteString(hash, passwordHash)
+	io.WriteString(hash, salt2)
+	return fmt.Sprintf("%x", hash.Sum(nil))
 }

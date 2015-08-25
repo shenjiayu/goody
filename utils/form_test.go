@@ -12,7 +12,7 @@ type User struct {
 	Password string `encrypt:"true"`
 }
 
-func Test_Form2Struct(t *testing.T) {
+func TestForm2Struct(t *testing.T) {
 	form := url.Values{}
 	form.Add("id", "1")
 	form.Add("username", "shenjiayu")
