@@ -8,6 +8,7 @@ import (
 var funcs_map = template.FuncMap{
 	"backtohtml": backtohtml,
 	"multiply":   multiply,
+	"divide":     divide,
 }
 
 func backtohtml(data string) interface{} {
@@ -16,6 +17,10 @@ func backtohtml(data string) interface{} {
 
 func multiply(a, b float32) float32 {
 	return a * b
+}
+
+func divide(a, b int) float32 {
+	return float32(a) / float32(b) * 100
 }
 
 func RenderTemplate(w http.ResponseWriter, page string, data interface{}) {
