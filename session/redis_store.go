@@ -47,14 +47,14 @@ func (r *RedisStore) New(req *http.Request, w http.ResponseWriter) (*Session, er
 			if err := r.Save(w, session.Cache); err != nil {
 				return nil, err
 			}
-			http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
+			//http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 		}
 	} else if err == http.ErrNoCookie {
 		session.Cache = anonymousUser(r)
 		if err := r.Save(w, session.Cache); err != nil {
 			return nil, err
 		}
-		http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
+		//http.SetCookie(w, session.Cache.NewCookie("Session_ID", session.Cache.ID, session.Cache.Options))
 	}
 	return session, nil
 }

@@ -74,7 +74,7 @@ func (router *router) CallMethod(req *http.Request, w http.ResponseWriter, l *lo
 			Content string `json:"content"`
 		}{
 			"Fail",
-			"Csrf error",
+			err.Error(),
 		}
 		controller.serveJson(w, data)
 		return

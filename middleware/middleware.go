@@ -17,7 +17,7 @@ func ProcessRequest(req *http.Request, w http.ResponseWriter) (*session.Session,
 		s.Request.ParseForm()
 		csrf := s.Request.FormValue("csrf")
 		if csrf != s.Cache.Values.Csrf {
-			return nil, fmt.Errorf("error:csrf is invalid")
+			return nil, fmt.Errorf("Invalid Csrf")
 		}
 	} else {
 		s.Ctx.Output.Set("Csrf", s.Cache.Values.Csrf)
