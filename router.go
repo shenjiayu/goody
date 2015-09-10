@@ -68,6 +68,15 @@ func (router *router) CallMethod(req *http.Request, w http.ResponseWriter, l *lo
 	s, err := middleware.ProcessRequest(req, w)
 	if err != nil {
 		fmt.Errorf(err.Error())
+		controller := new(Controller)
+		data := struct {
+			Status  string `json:"status"`
+			Content string `json:"content"`
+		}{
+			"Fail",
+			"Csrf error",
+		}
+		controller.serveJson(w, data)
 		return
 	}
 	session_value := reflect.ValueOf(s)
