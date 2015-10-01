@@ -84,15 +84,16 @@ func (r *RedisStore) Save(w http.ResponseWriter, c *Cache) error {
 func (r *RedisStore) Get(req *http.Request) (*Cache, error) {
 	conn := pool.Get()
 	defer conn.Close()
-	c := &Cache{}
-	if cookie, err := req.Cookie("Session_ID"); err == nil {
-		_, err := redis.String(conn.Do("GET", "session_"+cookie.Value))
-		if err != nil {
-			return nil, err
-		}
-		c.ID = cookie.Value
-		c.store = r
+	c := new(Cache)
+	cookie, err := req.Cookie("Session_ID")
+	if err != nil {
+		return nil, err
 	}
+	data, err := redis.String(conn.Do("GET", "session_"+cookie.Value))
+	if err != nil {
+		return nil, err
+	}
+	c.DecodingFromJson(data)
 	return c, nil
 }
 

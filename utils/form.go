@@ -53,6 +53,9 @@ func Form2Struct(form url.Values, s interface{}) error {
 			case reflect.Float64:
 				tmp, _ := strconv.ParseFloat(data, 64)
 				field.SetFloat(tmp)
+			case reflect.Bool:
+				tmp, _ := strconv.ParseBool(data)
+				field.SetBool(tmp)
 			default:
 				return errors.New("invalid type.")
 			}
